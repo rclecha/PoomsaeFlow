@@ -57,6 +57,7 @@
 			children = (
 				947EDE3B2F85F49700CCB5BD /* PoomsaeFlow */,
 				947EDE3A2F85F49700CCB5BD /* Products */,
+				947EDE712F86098500CCB5BD /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -67,6 +68,14 @@
 				947EDE4A2F85F49700CCB5BD /* PoomsaeFlowTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		947EDE712F86098500CCB5BD /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				947EDE4B2F85F49700CCB5BD /* PoomsaeFlowTests */,
+			);
+			name = "Recovered References";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

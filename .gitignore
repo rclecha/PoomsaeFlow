@@ -20,3 +20,4 @@ build/
 # Xcode Cloud
 ci_scripts/
 
+.claude/

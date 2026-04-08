@@ -1,6 +1,6 @@
 import Foundation
 
-enum SessionScope: Codable {
+enum SessionScope: Codable, Equatable {
     case single(UUID)
     case fullSet
     case custom([UUID])

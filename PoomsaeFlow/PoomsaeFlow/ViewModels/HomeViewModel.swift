@@ -105,4 +105,22 @@ final class HomeViewModel {
         sessionDefaults = defaults
         userPrefs.save(defaults)
     }
+
+    /// Builds a ready-to-start `PracticeSession` by re-filtering eligible forms for
+    /// the given family selection and delegating to SessionBuilder.
+    /// Lives in the ViewModel so views never call FormFilterService or SessionBuilder directly.
+    func buildSession(scope: SessionScope, order: SessionOrder, families: [FormFamily]) -> PracticeSession {
+        let forms = FormFilterService.eligibleForms(
+            userBelt: activeBeltLevel,
+            profile: activeProfile,
+            allForms: formRepo.all,
+            enabledFamilies: families
+        )
+        return SessionBuilder.buildSession(
+            scope: scope,
+            order: order,
+            eligibleForms: forms,
+            pinnedIDs: pinnedForms.formIDs
+        )
+    }
 }

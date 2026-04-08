@@ -18,10 +18,20 @@ final class SessionViewModel {
 
     // MARK: - Derived State
 
-    var currentForm: TKDForm? { controller.currentForm }
-    var progress: Double     { controller.progress }
-    var isComplete: Bool     { controller.isComplete }
-    var attempts: [FormAttempt] { controller.attempts }
+    var currentForm: TKDForm?    { controller.currentForm }
+    var progress: Double          { controller.progress }
+    var isComplete: Bool          { controller.isComplete }
+    var attempts: [FormAttempt]   { controller.attempts }
+    var currentIndex: Int         { controller.session.currentIndex }
+    var queueCount: Int           { controller.session.queue.count }
+
+    /// True when the current form's ID is in the stored pinned set.
+    /// Reads `userPrefs` directly so the value reflects any pin toggle without
+    /// requiring HomeViewModel to propagate a refresh.
+    var isCurrentFormPinned: Bool {
+        guard let form = currentForm else { return false }
+        return userPrefs.pinnedForms?.formIDs.contains(form.id) ?? false
+    }
 
     // MARK: - Init
 
@@ -53,6 +63,8 @@ final class SessionViewModel {
     }
 
     /// Toggles the pin state of the currently displayed form and persists the updated set.
+    /// Also marks `hasSeenPinHint = true` on the first interaction so the tutorial
+    /// hint never appears again after the user has discovered the feature.
     func userTappedPin() {
         guard let form = currentForm else { return }
         let stored = userPrefs.pinnedForms
@@ -68,6 +80,14 @@ final class SessionViewModel {
             createdAt: stored?.createdAt ?? now,
             updatedAt: now
         ))
+        if let onboarding = userPrefs.onboardingState, !onboarding.hasSeenPinHint {
+            userPrefs.save(OnboardingState(
+                isOnboarded: onboarding.isOnboarded,
+                hasSeenPinHint: true,
+                createdAt: onboarding.createdAt,
+                updatedAt: now
+            ))
+        }
     }
 
     // MARK: - Private

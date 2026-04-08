@@ -1,3 +1,10 @@
+/// The app-wide belt rank abstraction, independent of any dojang's specific belt system.
+///
+/// Dojang profiles can have many intermediate belts (e.g. Yellow Adv, Orange) that map to
+/// a single CanonicalBelt via `BeltLevel.canonical`. Form eligibility is always expressed
+/// in terms of CanonicalBelt so that `FormFilterService` works correctly regardless of
+/// which belt system the user's dojang uses. Never use raw integers or dojang belt names
+/// for eligibility comparisons.
 enum CanonicalBelt: String, Codable, CaseIterable, Comparable {
     case white
     case yellow
@@ -19,6 +26,9 @@ enum CanonicalBelt: String, Codable, CaseIterable, Comparable {
         }
     }
 
+    // Explicit Comparable via order rather than relying on enum case order so that
+    // the ordering is preserved even if cases are reordered during future refactors,
+    // and to make the intent clear to anyone reading eligibility filter logic.
     static func < (lhs: CanonicalBelt, rhs: CanonicalBelt) -> Bool {
         lhs.order < rhs.order
     }

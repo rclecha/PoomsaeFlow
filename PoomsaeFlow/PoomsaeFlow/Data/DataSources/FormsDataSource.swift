@@ -1,5 +1,13 @@
 import Foundation
 
+/// The compile-time form catalog. All UUIDs are hardcoded literals — never generated with
+/// `UUID()` — because `FormAttempt` records stored in SwiftData reference these IDs forever.
+/// Changing a UUID here would silently orphan every historical attempt for that form.
+///
+/// The catalog is a static array rather than a database table because its contents never
+/// change at runtime. Keeping it here means the repository layer can swap in a remote JSON
+/// source in v2 without touching any call sites: `FormsRepository` already abstracts access,
+/// and this file becomes a single-file migration target.
 enum FormsDataSource {
     static let all: [TKDForm] = keecho + taegeuk + palgwe + poom + blackBelt
 
@@ -313,6 +321,8 @@ enum FormsDataSource {
 
     // MARK: - Black Belt
 
+    // Known gap: Jitae, Cheonkwon, Hansu, and Ilyo have no YouTube URLs yet.
+    // Their UUIDs are reserved so SwiftData history is not disrupted when videos are added.
     private static let blackBelt: [TKDForm] = [
         TKDForm(
             id: UUID(uuidString: "00000005-0000-0000-0000-000000000001")!,

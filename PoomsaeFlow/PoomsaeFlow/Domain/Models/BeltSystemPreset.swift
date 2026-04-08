@@ -1,5 +1,11 @@
 import Foundation
 
+/// A factory enum for the built-in belt configurations.
+///
+/// This type exists only in the data and onboarding layers. Service and presentation layers
+/// must never import or reference `BeltSystemPreset` directly — they work with `DojangProfile`
+/// so that user-defined custom profiles (v2) slot in without any additional changes.
+/// Always call `makeProfile()` and pass the result downstream; never pass the preset itself.
 enum BeltSystemPreset: String, Codable, CaseIterable {
     case worldTaekwondo
     case spartaTKD
@@ -13,12 +19,22 @@ enum BeltSystemPreset: String, Codable, CaseIterable {
         }
     }
 
+    // MARK: - ProfileID
+
+    /// Stable UUIDs so that a `TrainingProfile` stored in UserDefaults can always be
+    /// correlated back to the correct `DojangProfile` across app launches. If these were
+    /// generated with `UUID()`, every cold launch would produce a different ID and
+    /// stored preferences would become orphaned.
     private enum ProfileID {
         static let worldTaekwondo = UUID(uuidString: "10000000-0000-0000-0000-000000000001")!
         static let spartaTKD      = UUID(uuidString: "10000000-0000-0000-0000-000000000002")!
         static let custom         = UUID(uuidString: "10000000-0000-0000-0000-000000000003")!
     }
 
+    // MARK: - BeltID
+
+    /// Same stability requirement as ProfileID: `BeltLevel.id` is stored in
+    /// `TrainingProfile.selectedBeltLevelID` and must round-trip across launches.
     private enum BeltID {
         // World Taekwondo
         static let wtWhite  = UUID(uuidString: "11000000-0000-0000-0000-000000000001")!
@@ -42,6 +58,8 @@ enum BeltSystemPreset: String, Codable, CaseIterable {
         static let spartaPoom      = UUID(uuidString: "12000000-0000-0000-0000-000000000012")!
         static let spartaBlack     = UUID(uuidString: "12000000-0000-0000-0000-000000000013")!
     }
+
+    // MARK: - makeProfile()
 
     func makeProfile() -> DojangProfile {
         let now = Date()

@@ -1,6 +1,6 @@
 # Xcode
-*.xcodeproj/xcuserdata/
-*.xcworkspace/xcuserdata/
+xcuserdata/
+*.xcuserstate
 *.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
 DerivedData/
 build/
@@ -19,3 +19,4 @@ build/
 
 # Xcode Cloud
 ci_scripts/
+

@@ -14,7 +14,7 @@ enum CanonicalBelt: String, Codable, CaseIterable, Comparable {
     case poom
     case black
 
-    var order: Int {
+    nonisolated var order: Int {
         switch self {
         case .white:  return 0
         case .yellow: return 1
@@ -29,7 +29,7 @@ enum CanonicalBelt: String, Codable, CaseIterable, Comparable {
     // Explicit Comparable via order rather than relying on enum case order so that
     // the ordering is preserved even if cases are reordered during future refactors,
     // and to make the intent clear to anyone reading eligibility filter logic.
-    static func < (lhs: CanonicalBelt, rhs: CanonicalBelt) -> Bool {
+    nonisolated static func < (lhs: CanonicalBelt, rhs: CanonicalBelt) -> Bool {
         lhs.order < rhs.order
     }
 }

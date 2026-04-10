@@ -137,7 +137,7 @@ enum FormsDataSource {
             name: "Taegeuk Ee Jang",
             koreanName: "태극 이장",
             family: .taegeuk,
-            introducedAt: .yellow,
+            introducedAt: .orange,
             videos: [
                 VideoResource(
                     url: youtube("YB2-yomN1pw"),
@@ -167,7 +167,7 @@ enum FormsDataSource {
             name: "Taegeuk Sa Jang",
             koreanName: "태극 사장",
             family: .taegeuk,
-            introducedAt: .green,
+            introducedAt: .greenAdv,
             videos: [
                 VideoResource(
                     url: youtube("bhLQfcXy__Q"),
@@ -197,7 +197,7 @@ enum FormsDataSource {
             name: "Taegeuk Yuk Jang",
             koreanName: "태극 육장",
             family: .taegeuk,
-            introducedAt: .blue,
+            introducedAt: .blueAdv,
             videos: [
                 VideoResource(
                     url: youtube("UCxVGTbAENU"),
@@ -227,7 +227,7 @@ enum FormsDataSource {
             name: "Taegeuk Pal Jang",
             koreanName: "태극 팔장",
             family: .taegeuk,
-            introducedAt: .red,
+            introducedAt: .redAdv,
             videos: [
                 VideoResource(
                     url: youtube("4IL0hqcs_jE"),
@@ -247,7 +247,7 @@ enum FormsDataSource {
             name: "Palgwe Il Jang",
             koreanName: "팔괘 일장",
             family: .palgwe,
-            introducedAt: .yellow,
+            introducedAt: .yellowAdv,
             videos: [
                 VideoResource(
                     url: youtube("uiLBDwJdQUU"),
@@ -262,7 +262,7 @@ enum FormsDataSource {
             name: "Palgwe Ee Jang",
             koreanName: "팔괘 이장",
             family: .palgwe,
-            introducedAt: .yellow,
+            introducedAt: .orangeAdv,
             videos: [
                 VideoResource(
                     url: youtube("3jbKCbI-rJA"),
@@ -292,7 +292,7 @@ enum FormsDataSource {
             name: "Palgwe Sa Jang",
             koreanName: "팔괘 사장",
             family: .palgwe,
-            introducedAt: .green,
+            introducedAt: .greenAdv,
             videos: [
                 VideoResource(
                     url: youtube("rtZGG5-P0Wo"),
@@ -322,7 +322,7 @@ enum FormsDataSource {
             name: "Palgwe Yuk Jang",
             koreanName: "팔괘 육장",
             family: .palgwe,
-            introducedAt: .blue,
+            introducedAt: .blueAdv,
             videos: [
                 VideoResource(
                     url: youtube("veARrGqOxpM"),
@@ -352,7 +352,7 @@ enum FormsDataSource {
             name: "Palgwe Pal Jang",
             koreanName: "팔괘 팔장",
             family: .palgwe,
-            introducedAt: .red,
+            introducedAt: .redAdv,
             videos: [
                 VideoResource(
                     url: youtube("XCr8R-yKgvU"),

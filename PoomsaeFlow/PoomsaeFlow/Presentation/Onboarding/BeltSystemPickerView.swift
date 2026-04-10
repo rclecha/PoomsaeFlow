@@ -25,21 +25,20 @@ struct BeltSystemPickerView: View {
                         .foregroundStyle(.secondary)
                 }
             } else {
-                Button {
-                    onSelect(preset)
-                } label: {
-                    HStack {
-                        Text(preset.displayName)
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        if preset == selectedPreset {
-                            Image(systemName: "checkmark")
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.tint)
-                        }
+                HStack {
+                    Text(preset.displayName)
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    if preset == selectedPreset {
+                        Image(systemName: "checkmark")
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.tint)
                     }
                 }
-                .buttonStyle(.plain)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    onSelect(preset)
+                }
             }
         }
         .navigationTitle("Select School")

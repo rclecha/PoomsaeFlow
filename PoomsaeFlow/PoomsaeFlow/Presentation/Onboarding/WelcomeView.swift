@@ -22,8 +22,7 @@ struct WelcomeView: View {
 
     // MARK: - Onboarding selections (accumulated across steps)
 
-    @State private var selectedPreset: BeltSystemPreset = .spartaTKD
-    @State private var selectedProfile: DojangProfile? = nil
+    @State private var flowState = OnboardingFlowState()
     @State private var selectedBelt: BeltLevel? = nil
     @State private var enabledFamilies: [FormFamily] = FormFamily.allCases
 
@@ -79,30 +78,25 @@ struct WelcomeView: View {
     }
 
     private var beltSystemStep: some View {
-        BeltSystemPickerView(selectedPreset: selectedPreset) { preset in
-            selectedPreset = preset
-            selectedProfile = preset.makeProfile()
+        BeltSystemPickerView(selectedPreset: flowState.selectedPreset) { preset in
+            flowState.selectPreset(preset)
             path.append(.belt)
         }
     }
 
     private var beltStep: some View {
-        Group {
-            if let profile = selectedProfile {
-                BeltPickerView(profile: profile, selectedBeltID: selectedBelt?.id) { belt in
-                    selectedBelt = belt
-                    path.append(.family)
-                }
-            }
+        BeltPickerView(profile: flowState.selectedProfile, selectedBeltID: selectedBelt?.id) { belt in
+            selectedBelt = belt
+            path.append(.family)
         }
     }
 
     private var familyStep: some View {
         Group {
-            if let profile = selectedProfile, let belt = selectedBelt {
+            if let belt = selectedBelt {
                 let count = FormFilterService.eligibleForms(
                     userBelt: belt,
-                    profile: profile,
+                    profile: flowState.selectedProfile,
                     allForms: formRepo.all,
                     enabledFamilies: enabledFamilies
                 ).count
@@ -115,7 +109,7 @@ struct WelcomeView: View {
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Done") {
-                            finish(profile: profile, belt: belt)
+                            finish(profile: flowState.selectedProfile, belt: belt)
                         }
                         .fontWeight(.semibold)
                     }

@@ -88,19 +88,58 @@ enum BeltSystemPreset: String, Codable, CaseIterable {
 
         case .spartaTKD:
             let belts: [(UUID, String, CanonicalBelt, Int, String)] = [
-                (BeltID.spartaWhite,     "White",       .white,  0,  "#FFFFFF"),
-                (BeltID.spartaYellow,    "Yellow",      .yellow, 1,  "#FFD700"),
-                (BeltID.spartaYellowAdv, "Yellow Adv",  .yellow, 2,  "#FFC107"),
-                (BeltID.spartaOrange,    "Orange",      .yellow, 3,  "#FF9800"),
-                (BeltID.spartaOrangeAdv, "Orange Adv",  .yellow, 4,  "#FF6F00"),
-                (BeltID.spartaGreen,     "Green",       .green,  5,  "#4CAF50"),
-                (BeltID.spartaGreenAdv,  "Green Adv",   .green,  6,  "#388E3C"),
-                (BeltID.spartaBlue,      "Blue",        .blue,   7,  "#2196F3"),
-                (BeltID.spartaBlueAdv,   "Blue Adv",    .blue,   8,  "#1565C0"),
-                (BeltID.spartaRed,       "Red",         .red,    9,  "#F44336"),
-                (BeltID.spartaRedAdv,    "Red Adv",     .red,    10, "#C62828"),
-                (BeltID.spartaPoom,      "Poom",        .poom,   11, "#7B1FA2"),
-                (BeltID.spartaBlack,     "Black",       .black,  12, "#212121"),
+                (BeltID.spartaWhite,     "White",       .white,     0,  "#FFFFFF"),
+                (BeltID.spartaYellow,    "Yellow",      .yellow,    1,  "#FFD700"),
+                (BeltID.spartaYellowAdv, "Yellow Adv",  .yellowAdv, 2,  "#FFC107"),
+                (BeltID.spartaOrange,    "Orange",      .orange,    3,  "#FF9800"),
+                (BeltID.spartaOrangeAdv, "Orange Adv",  .orangeAdv, 4,  "#FF6F00"),
+                (BeltID.spartaGreen,     "Green",       .green,     5,  "#4CAF50"),
+                (BeltID.spartaGreenAdv,  "Green Adv",   .greenAdv,  6,  "#388E3C"),
+                (BeltID.spartaBlue,      "Blue",        .blue,      7,  "#2196F3"),
+                (BeltID.spartaBlueAdv,   "Blue Adv",    .blueAdv,   8,  "#1565C0"),
+                (BeltID.spartaRed,       "Red",         .red,       9,  "#F44336"),
+                (BeltID.spartaRedAdv,    "Red Adv",     .redAdv,    10, "#C62828"),
+                (BeltID.spartaPoom,      "Poom",        .poom,      11, "#7B1FA2"),
+                (BeltID.spartaBlack,     "Black",       .black,     12, "#212121"),
+            ]
+            // Explicit allow-list: every form in the global catalog that Sparta TKD teaches.
+            // Keecho Sam Jang (00000001-…-0003) is intentionally excluded — Sparta TKD does
+            // not test or teach it. Other schools that do teach it are unaffected because
+            // this list only gates the spartaTKD profile.
+            let spartaFormIDs: Set<UUID> = [
+                // Keecho (Il and Ee only)
+                UUID(uuidString: "00000001-0000-0000-0000-000000000001")!,
+                UUID(uuidString: "00000001-0000-0000-0000-000000000002")!,
+                // Taegeuk
+                UUID(uuidString: "00000002-0000-0000-0000-000000000001")!,
+                UUID(uuidString: "00000002-0000-0000-0000-000000000002")!,
+                UUID(uuidString: "00000002-0000-0000-0000-000000000003")!,
+                UUID(uuidString: "00000002-0000-0000-0000-000000000004")!,
+                UUID(uuidString: "00000002-0000-0000-0000-000000000005")!,
+                UUID(uuidString: "00000002-0000-0000-0000-000000000006")!,
+                UUID(uuidString: "00000002-0000-0000-0000-000000000007")!,
+                UUID(uuidString: "00000002-0000-0000-0000-000000000008")!,
+                // Palgwe
+                UUID(uuidString: "00000003-0000-0000-0000-000000000001")!,
+                UUID(uuidString: "00000003-0000-0000-0000-000000000002")!,
+                UUID(uuidString: "00000003-0000-0000-0000-000000000003")!,
+                UUID(uuidString: "00000003-0000-0000-0000-000000000004")!,
+                UUID(uuidString: "00000003-0000-0000-0000-000000000005")!,
+                UUID(uuidString: "00000003-0000-0000-0000-000000000006")!,
+                UUID(uuidString: "00000003-0000-0000-0000-000000000007")!,
+                UUID(uuidString: "00000003-0000-0000-0000-000000000008")!,
+                // Poom
+                UUID(uuidString: "00000004-0000-0000-0000-000000000001")!,
+                // Black Belt
+                UUID(uuidString: "00000005-0000-0000-0000-000000000001")!,
+                UUID(uuidString: "00000005-0000-0000-0000-000000000002")!,
+                UUID(uuidString: "00000005-0000-0000-0000-000000000003")!,
+                UUID(uuidString: "00000005-0000-0000-0000-000000000004")!,
+                UUID(uuidString: "00000005-0000-0000-0000-000000000005")!,
+                UUID(uuidString: "00000005-0000-0000-0000-000000000006")!,
+                UUID(uuidString: "00000005-0000-0000-0000-000000000007")!,
+                UUID(uuidString: "00000005-0000-0000-0000-000000000008")!,
+                UUID(uuidString: "00000005-0000-0000-0000-000000000009")!,
             ]
             return DojangProfile(
                 id: ProfileID.spartaTKD,
@@ -110,7 +149,7 @@ enum BeltSystemPreset: String, Codable, CaseIterable {
                               displayOrder: order, colorHex: hex, isDefault: true,
                               createdAt: now, updatedAt: now)
                 },
-                formIDs: nil,
+                formIDs: spartaFormIDs,
                 createdAt: now,
                 updatedAt: now
             )

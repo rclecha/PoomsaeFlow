@@ -43,32 +43,33 @@ final class FormFilterServiceTests: XCTestCase {
         XCTAssertTrue(result.allSatisfy { $0.introducedAt <= .yellow })
     }
 
-    /// Sparta "Orange Adv" maps to canonical .yellow — its eligible set must be identical
-    /// to a standard WT Yellow belt, proving eligibility goes through canonical, not display name.
-    func test_spartaOrangeAdv_seesExactlySameFormsAsWTYellow() {
-        let spartaOrangeAdv = BeltLevel(id: UUID(), name: "Orange Adv", canonical: .yellow,
+    /// Sparta "Orange Adv" maps to canonical .orangeAdv — it must see forms introduced up to
+    /// and including .orangeAdv, but nothing at .green or above, proving eligibility goes
+    /// through canonical order, not display name.
+    func test_spartaOrangeAdv_seesFormsUpToOrangeAdv_notGreenOrAbove() {
+        let spartaOrangeAdv = BeltLevel(id: UUID(), name: "Orange Adv", canonical: .orangeAdv,
                                         displayOrder: 4, colorHex: "#FF6F00", isDefault: true,
                                         createdAt: .now, updatedAt: .now)
-        let wtYellow = makeBeltLevel(canonical: .yellow)
         let profile = makeProfile()
         let forms = [
             makeForm(family: .taegeuk, introducedAt: .white),
             makeForm(family: .taegeuk, introducedAt: .yellow),
-            makeForm(family: .taegeuk, introducedAt: .green),
+            makeForm(family: .taegeuk, introducedAt: .yellowAdv),
+            makeForm(family: .taegeuk, introducedAt: .orange),
+            makeForm(family: .taegeuk, introducedAt: .orangeAdv),
+            makeForm(family: .taegeuk, introducedAt: .green),    // above — must be excluded
+            makeForm(family: .taegeuk, introducedAt: .blue),     // above — must be excluded
         ]
 
-        let spartaResult = FormFilterService.eligibleForms(
+        let result = FormFilterService.eligibleForms(
             userBelt: spartaOrangeAdv, profile: profile,
             allForms: forms, enabledFamilies: [.taegeuk]
         )
-        let wtResult = FormFilterService.eligibleForms(
-            userBelt: wtYellow, profile: profile,
-            allForms: forms, enabledFamilies: [.taegeuk]
-        )
 
-        let sortedSpartaIDs = spartaResult.map(\.id).sorted { $0.uuidString < $1.uuidString }
-        let sortedWTIDs    = wtResult.map(\.id).sorted    { $0.uuidString < $1.uuidString }
-        XCTAssertEqual(sortedSpartaIDs, sortedWTIDs)
+        XCTAssertEqual(result.count, 5)
+        XCTAssertTrue(result.allSatisfy { $0.introducedAt <= .orangeAdv })
+        XCTAssertFalse(result.contains { $0.introducedAt == .green })
+        XCTAssertFalse(result.contains { $0.introducedAt == .blue })
     }
 
     // MARK: - Family filtering

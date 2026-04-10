@@ -15,20 +15,19 @@ struct FamilyPickerView: View {
     var body: some View {
         Section {
             ForEach(FormFamily.allCases, id: \.self) { family in
-                Button {
-                    toggle(family)
-                } label: {
-                    HStack {
-                        Text(family.displayName)
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        if enabledFamilies.contains(family) {
-                            Image(systemName: "checkmark")
-                                .foregroundStyle(.tint)
-                        }
+                HStack {
+                    Text(family.displayName)
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    if enabledFamilies.contains(family) {
+                        Image(systemName: "checkmark")
+                            .foregroundStyle(.tint)
                     }
                 }
-                .buttonStyle(.plain)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    toggle(family)
+                }
             }
         } footer: {
             Text("\(formCount) forms selected")

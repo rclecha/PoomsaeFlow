@@ -10,33 +10,32 @@ struct BeltPickerView: View {
         // but a future custom profile may not guarantee order.
         let sorted = profile.beltLevels.sorted { $0.displayOrder < $1.displayOrder }
         List(sorted) { belt in
-            Button {
-                onSelect(belt)
-            } label: {
-                HStack(spacing: 12) {
-                    // Swatch uses a subtle stroke so white belts remain visible on any background
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color(hex: belt.colorHex))
-                        .frame(width: 24, height: 24)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(Color.primary.opacity(0.15), lineWidth: 0.5)
-                        )
+            HStack(spacing: 12) {
+                // Swatch uses a subtle stroke so white belts remain visible on any background
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color(hex: belt.colorHex))
+                    .frame(width: 24, height: 24)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(Color.primary.opacity(0.15), lineWidth: 0.5)
+                    )
 
-                    Text(belt.name)
-                        .foregroundStyle(.primary)
+                Text(belt.name)
+                    .foregroundStyle(.primary)
 
-                    Spacer()
+                Spacer()
 
-                    if belt.id == selectedBeltID {
-                        Image(systemName: "checkmark")
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.tint)
-                    }
+                if belt.id == selectedBeltID {
+                    Image(systemName: "checkmark")
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.tint)
                 }
-                .padding(.vertical, 2)
             }
-            .buttonStyle(.plain)
+            .padding(.vertical, 2)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onSelect(belt)
+            }
         }
         .navigationTitle("Select Belt")
         .navigationBarTitleDisplayMode(.inline)

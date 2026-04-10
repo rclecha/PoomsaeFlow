@@ -8,21 +8,33 @@
 enum CanonicalBelt: String, Codable, CaseIterable, Comparable {
     case white
     case yellow
+    case yellowAdv
+    case orange
+    case orangeAdv
     case green
+    case greenAdv
     case blue
+    case blueAdv
     case red
+    case redAdv
     case poom
     case black
 
     nonisolated var order: Int {
         switch self {
-        case .white:  return 0
-        case .yellow: return 1
-        case .green:  return 2
-        case .blue:   return 3
-        case .red:    return 4
-        case .poom:   return 5
-        case .black:  return 6
+        case .white:     return 0
+        case .yellow:    return 1
+        case .yellowAdv: return 2
+        case .orange:    return 3
+        case .orangeAdv: return 4
+        case .green:     return 5
+        case .greenAdv:  return 6
+        case .blue:      return 7
+        case .blueAdv:   return 8
+        case .red:       return 9
+        case .redAdv:    return 10
+        case .poom:      return 11
+        case .black:     return 12
         }
     }
 

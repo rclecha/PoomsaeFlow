@@ -5,9 +5,10 @@ final class SessionBuilderTests: XCTestCase {
 
     // MARK: - Fixtures
 
-    private func makeForm(id: UUID = UUID()) -> TKDForm {
+    private func makeForm(id: UUID = UUID(), family: FormFamily = .taegeuk,
+                          introducedAt: CanonicalBelt = .white) -> TKDForm {
         TKDForm(id: id, name: "Form \(id.uuidString.prefix(4))", koreanName: nil,
-                family: .taegeuk, introducedAt: .white, videos: [], notes: nil)
+                family: family, introducedAt: introducedAt, videos: [], notes: nil)
     }
 
     private func build(scope: SessionScope, order: SessionOrder,
@@ -18,11 +19,27 @@ final class SessionBuilderTests: XCTestCase {
 
     // MARK: - Order
 
-    /// Sequential must not reorder the input — the caller controls canonical ordering.
-    func test_sequentialOrder_preservesInputOrder() {
-        let forms = [makeForm(), makeForm(), makeForm()]
+    /// Sequential must sort by introducedAt.order ascending, with family as a tiebreaker
+    /// (Keecho < Taegeuk < Palgwe < Poom < Black Belt) within the same belt level.
+    func test_sequentialOrder_sortsByBeltOrderThenFamily() {
+        let greenTaegeuk  = makeForm(family: .taegeuk,  introducedAt: .green)
+        let greenPalgwe   = makeForm(family: .palgwe,   introducedAt: .green)
+        let yellowTaegeuk = makeForm(family: .taegeuk,  introducedAt: .yellow)
+        let whiteTaegeuk  = makeForm(family: .taegeuk,  introducedAt: .white)
+        let whiteKeecho   = makeForm(family: .keecho,   introducedAt: .white)
+
+        // Deliberately supply forms in wrong order to confirm sorting is applied.
+        let forms = [greenPalgwe, yellowTaegeuk, greenTaegeuk, whiteTaegeuk, whiteKeecho]
         let session = build(scope: .fullSet, order: .sequential, forms: forms)
-        XCTAssertEqual(session.queue.map(\.id), forms.map(\.id))
+        let ids = session.queue.map(\.id)
+
+        XCTAssertEqual(ids, [
+            whiteKeecho.id,   // white, keecho
+            whiteTaegeuk.id,  // white, taegeuk
+            yellowTaegeuk.id, // yellow, taegeuk
+            greenTaegeuk.id,  // green, taegeuk
+            greenPalgwe.id,   // green, palgwe (same belt, after taegeuk)
+        ])
     }
 
     /// Randomized must contain all the same forms (no drops, no duplicates) and must
@@ -62,7 +79,7 @@ final class SessionBuilderTests: XCTestCase {
         let forms = [makeForm(), makeForm(), makeForm()]
         let session = build(scope: .fullSet, order: .sequential, forms: forms)
         XCTAssertEqual(session.queue.count, forms.count)
-        XCTAssertEqual(session.queue.map(\.id), forms.map(\.id))
+        XCTAssertEqual(Set(session.queue.map(\.id)), Set(forms.map(\.id)))
     }
 
     /// custom([uuid]) returns only the specified forms in the order they appear

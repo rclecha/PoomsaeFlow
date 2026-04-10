@@ -9,7 +9,7 @@ enum SessionBuilder {
     ///
     /// - Parameters:
     ///   - scope: Determines which subset of `eligibleForms` to include.
-    ///   - order: Applied after scope resolution — sequential preserves input order,
+    ///   - order: Applied after scope resolution — sequential sorts by belt rank then family,
     ///     randomized shuffles without replacement.
     ///   - eligibleForms: Pre-filtered by `FormFilterService`; this function does not
     ///     re-apply belt or family rules.
@@ -57,8 +57,19 @@ enum SessionBuilder {
         by order: SessionOrder
     ) -> [TKDForm] {
         switch order {
-        case .sequential: return forms
-        case .randomized: return forms.shuffled()
+        case .sequential:
+            // Primary: introducedAt.order ascending (belt rank).
+            // Tiebreaker: FormFamily.allCases position — Keecho, Taegeuk, Palgwe, Poom, Black Belt.
+            let familyRank = Dictionary(
+                uniqueKeysWithValues: FormFamily.allCases.enumerated().map { ($1, $0) }
+            )
+            return forms.sorted {
+                let beltDiff = $0.introducedAt.order - $1.introducedAt.order
+                if beltDiff != 0 { return beltDiff < 0 }
+                return (familyRank[$0.family] ?? 0) < (familyRank[$1.family] ?? 0)
+            }
+        case .randomized:
+            return forms.shuffled()
         }
     }
 }

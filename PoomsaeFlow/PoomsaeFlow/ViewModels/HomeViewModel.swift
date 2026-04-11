@@ -113,6 +113,16 @@ final class HomeViewModel {
         userPrefs.save(defaults)
     }
 
+    /// Re-reads pinned forms from the repository so HomeView reflects changes made
+    /// during a session (e.g. the user tapped the pin button in SessionView).
+    func reloadPinnedForms() {
+        pinnedForms = userPrefs.pinnedForms ?? PinnedForms(
+            formIDs: [],
+            createdAt: Date(),
+            updatedAt: Date()
+        )
+    }
+
     /// Builds a ready-to-start `PracticeSession` by re-filtering eligible forms for
     /// the given family selection and delegating to SessionBuilder.
     /// Lives in the ViewModel so views never call FormFilterService or SessionBuilder directly.

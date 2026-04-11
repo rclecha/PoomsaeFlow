@@ -66,6 +66,9 @@ struct HomeView: View {
                 onDone:    { activeSession = nil }
             )
         }
+        .onChange(of: activeSession?.id) { _, newID in
+            if newID == nil { homeVM.reloadPinnedForms() }
+        }
     }
 
     // MARK: - Belt profile card

@@ -15,6 +15,14 @@ struct ContentView: View {
     @State private var homeVM: HomeViewModel
 
     init() {
+        // Wipe all persisted state so each UITest run starts from a clean slate.
+        // The app's normal user data is never affected — this branch is only
+        // reachable when the test runner injects the -uitesting argument.
+        if CommandLine.arguments.contains("-uitesting") {
+            UserDefaults.standard.removePersistentDomain(forName: Bundle.main.bundleIdentifier ?? "")
+            UserDefaults.standard.synchronize()
+        }
+
         let prefs = DefaultUserPrefsRepository()
         let repo  = DefaultFormRepository()
         _isOnboarded = State(initialValue: prefs.onboardingState?.isOnboarded ?? false)

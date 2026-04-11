@@ -39,6 +39,7 @@ struct BeltSystemPickerView: View {
                 .onTapGesture {
                     onSelect(preset)
                 }
+                .accessibilityIdentifier("belt_system_row_\(preset.rawValue)")
             }
         }
         .navigationTitle("Select School")

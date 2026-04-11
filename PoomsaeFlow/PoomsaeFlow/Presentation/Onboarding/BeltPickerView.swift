@@ -36,6 +36,7 @@ struct BeltPickerView: View {
             .onTapGesture {
                 onSelect(belt)
             }
+            .accessibilityIdentifier("belt_row_\(belt.name)")
         }
         .navigationTitle("Select Belt")
         .navigationBarTitleDisplayMode(.inline)

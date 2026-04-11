@@ -65,6 +65,7 @@ struct SessionView: View {
                 // Amber fill when pinned matches the iOS bookmarks convention
                 .foregroundStyle(sessionViewModel.isCurrentFormPinned ? Color.yellow : Color.secondary)
         }
+        .accessibilityIdentifier("pin_button")
     }
 
     private func formContent(form: TKDForm) -> some View {

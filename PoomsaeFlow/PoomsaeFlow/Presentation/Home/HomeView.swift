@@ -141,6 +141,7 @@ struct HomeView: View {
             ) {
                 selectedScope = .pinned
             }
+            .accessibilityIdentifier("session_card_pinned")
         }
     }
 
@@ -239,6 +240,9 @@ private struct BeltFormRow: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .contentShape(Rectangle())
         .onTapGesture(perform: onTap)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("belt_form_row")
     }
 }
 

@@ -20,6 +20,7 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     beltProfileCard
                     sessionTypeSection
+                    beltFormsSection
                 }
                 .padding()
             }
@@ -140,17 +141,35 @@ struct HomeView: View {
             ) {
                 selectedScope = .pinned
             }
+        }
+    }
 
-            // Single form uses the first eligible form; disabled if the set is empty
-            if let first = homeVM.eligibleForms.first {
-                SessionTypeCard(
-                    title: "Single form",
-                    subtitle: first.name,
-                    systemImage: "doc",
-                    isSelected: selectedScope == .single(first.id),
-                    isEnabled: true
-                ) {
-                    selectedScope = .single(first.id)
+    // MARK: - Belt forms section
+
+    /// Lists each form introduced at the trainee's current belt. Tapping a row immediately
+    /// starts a belt form session using the stored session defaults.
+    private var beltFormsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Belt Forms")
+                .font(.headline)
+
+            if homeVM.formsIntroducedAtCurrentBelt.isEmpty {
+                Text("No new forms introduced at this belt")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            } else {
+                ForEach(homeVM.formsIntroducedAtCurrentBelt) { form in
+                    BeltFormRow(form: form) {
+                        startSession(
+                            scope: .single(form.id),
+                            order: homeVM.sessionDefaults.defaultOrder,
+                            families: homeVM.sessionDefaults.enabledFamilies
+                        )
+                    }
                 }
             }
         }
@@ -185,6 +204,42 @@ private struct ActiveSession: Identifiable {
     let id = UUID()
     let viewModel: SessionViewModel
     let config: SessionConfig
+}
+
+// MARK: - BeltFormRow
+
+private struct BeltFormRow: View {
+    let form: TKDForm
+    let onTap: () -> Void
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "doc")
+                .font(.title3)
+                .foregroundStyle(Color.accentColor)
+                .frame(width: 32)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(form.name)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.primary)
+                Text(form.family.displayName)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onTap)
+    }
 }
 
 // MARK: - SessionTypeCard

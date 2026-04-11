@@ -34,6 +34,13 @@ final class HomeViewModel {
         )
     }
 
+    /// Forms whose `introducedAt` belt exactly matches the trainee's current canonical belt.
+    /// Derived from `eligibleForms` so the profile catalog gate and enabled-families filter
+    /// are already applied — only the "exactly this belt" refinement is added here.
+    var formsIntroducedAtCurrentBelt: [TKDForm] {
+        eligibleForms.filter { $0.introducedAt == activeBeltLevel.canonical }
+    }
+
     // MARK: - Init
 
     init(userPrefs: UserPrefsRepository, formRepo: FormRepository) {

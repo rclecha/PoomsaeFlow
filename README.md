@@ -19,7 +19,7 @@ A personal Taekwondo poomsae training companion for iOS. Built with SwiftUI and 
 
 - SwiftUI, iOS 17+, Xcode 16+
 - `@Observable` macro (not `ObservableObject`)
-- SwiftData for session history persistence
+- SwiftData for `FormAttempt` persistence (session history queries are v2 — `SessionRepository` is currently a stub)
 - No third-party dependencies
 - Xcode Cloud for CI
 
@@ -35,7 +35,22 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for full diagrams and [IMPLEMENTATION_P
 
 ## Development
 
-Read `CLAUDE.md` before writing any code. Start with Step 1 of the build sequence in `IMPLEMENTATION_PLAN.md`.
+> **Read `CLAUDE.md` before writing any code.**
+
+v1 is complete. See `IMPLEMENTATION_PLAN.md` for architecture decisions and the version roadmap for what's next.
+
+## Testing
+
+- **Unit tests:** 5 test files — TDD coverage for all services and controllers, `HomeViewModel`, and `OnboardingFlowState`
+- **UITests:** 3 test classes covering app launch, onboarding flow, and pinned forms
+- Run UITests with the `-uitesting` launch argument — this resets `UserDefaults` for a clean state on each run
+- **Total: 42 tests, all passing at v1.0**
+
+## Known v1 limitations
+
+- `BeltSystemPreset.custom` shows "coming soon" — not implemented in v1
+- `SessionRepository` is a no-op stub — session history persistence is v2
+- Jitae, Cheonkwon, Hansu, and Ilyo have no YouTube video URLs in v1
 
 ## Version roadmap
 

@@ -7,7 +7,7 @@
 - No third-party dependencies
 
 ## Architecture
-Four layers: Presentation → ViewModels+Controllers → Services → Repositories/DataSources
+Four layers: Presentation → ViewModels+Controllers → Domain → Repositories/DataSources
 - Views hold zero business logic — only bindings and layout only
 - SessionController owns all mutable session state and outcome logic
 - SessionViewModel is thin — translates taps into controller calls, exposes derived state
@@ -20,17 +20,17 @@ Four layers: Presentation → ViewModels+Controllers → Services → Repositori
 - BeltLevel.canonical maps any dojang-specific belt to CanonicalBelt
 - DojangProfile owns both the belt ladder and the form catalog — primary extensibility seam
 - BeltSystemPreset is a factory enum only — call makeProfile() to get a DojangProfile
-- UserPreferences is split into four Codable structs: TrainingProfile, SessionDefaults,
-  PinnedForms, OnboardingState — all carry createdAt and updatedAt
+- UserPreferences is split into five Codable structs: TrainingProfile, SessionDefaults,
+  PinnedForms, OnboardingState, and activeProfile: DojangProfile? — all carry createdAt
+  and updatedAt. activeProfile stores the full DojangProfile value (not just an ID)
+  because the preset factory is not available at decode time.
 - SessionScope carries UUIDs, not TKDForm objects — resolved by SessionBuilder via FormRepository
 - TKDForm.videos is [VideoResource], not a single URL — supports multiple sources
 
 ## Patterns to enforce
 - Write tests for FormFilterService and SessionBuilder BEFORE implementing them
 - Write tests for SessionController BEFORE implementing it
-- SessionRepository.save() and fetchHistory() exist as stubs in v1 — do not implement
 - FormAttempt.userID is always a local anonymous UUID in v1 — field must exist
-- BeltSystemPreset.custom shows "coming soon" in UI — no implementation in v1
 - All persistent types carry createdAt and updatedAt
 
 ## Patterns to avoid
@@ -41,3 +41,52 @@ Four layers: Presentation → ViewModels+Controllers → Services → Repositori
 - Do not use raw integers for belt comparison — always use CanonicalBelt.order
 - Do not pass TKDForm objects into SessionScope — use UUIDs
 - Do not reference BeltSystemPreset in service or presentation layers — use DojangProfile
+- Do not implement SessionRepository.save() or fetchHistory() — they are v1 stubs (see v1 intentional stubs below)
+
+## Composition root
+Concrete repos are instantiated in ContentView. All new repos and ViewModels must be
+wired there. Do not instantiate repos in Views or ViewModels.
+
+## UITest patterns
+- All UITest classes must launch with app.launchArguments = ["-uitesting"] — ContentView
+  checks this flag and wipes UserDefaults for a clean test state
+- Accessibility identifier convention: <context>_<element_type>_<value> — e.g.
+  belt_system_row_spartaTKD, belt_row_White, pin_button
+- PinnedFormsUITests intentionally has failing tests — they document a known bug where
+  pin state does not update the Pinned card subtitle in real time. Do not delete them.
+
+## @Observable patterns
+- All observable classes are final class
+- reloadPinnedForms() is called explicitly from HomeView.onChange(of:) after a session
+  ends — this is intentional design, not dead code or a bug. The ViewModel does not
+  observe session state directly.
+- FilterViewModel is sheet-scoped — instantiate it in the sheet, not at screen scope.
+  It is created when the filter sheet opens and discarded when it closes.
+- Multi-step state accumulation should be extracted to a separate @Observable class
+  (see OnboardingFlowState) so it can be unit tested independently of the view
+
+## Core type notes
+- DojangProfile.formIDs is Set<UUID>? — nil means "all catalog forms, no filter."
+  An empty Set means "no forms visible." Never set formIDs to an empty set when you
+  mean all forms. This distinction is critical for v1.1 dojang catalog work.
+
+## v1 intentional stubs — do not implement
+These are deliberately incomplete in v1. Do not implement them unless explicitly
+scoped for v2:
+- SessionRepository.save() and SessionRepository.fetchHistory() — no-op stubs, full
+  SwiftData implementation is v2
+- BeltSystemPreset.custom — shows "coming soon," no implementation in v1
+- Dan-level gating within .black — all nine black belt forms visible to any black belt
+  in v1; per-dan gating is v2
+
+## v1.1 scope (current)
+- Dojang-specific catalogs (major — touches data model, onboarding, new UI surface —
+  plan carefully before implementing)
+- Kukkiwon YouTube fallbacks for Jitae, Cheonkwon, Hansu, Ilyo
+- Expanded UITest suite
+
+## v2 scope (do not build yet)
+- Weakness engine
+- Stats view
+- Custom dojang editor
+- Full SwiftData SessionRepository implementation

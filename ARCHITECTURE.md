@@ -21,6 +21,7 @@ graph TD
         SVM[SessionViewModel]
         FVM[FilterViewModel]
         SC[SessionController]
+        OFS[OnboardingFlowState]
     end
 
     subgraph Domain["Domain Layer"]
@@ -38,7 +39,7 @@ graph TD
     subgraph Repos["Repositories"]
         FR[FormRepository]
         UPR[UserPrefsRepository]
-        SR[SessionRepository stub]
+        SR[SessionRepository stub — both methods no-ops, full SwiftData impl is v2]
     end
 
     subgraph External["External / Data Sources"]
@@ -79,17 +80,20 @@ stateDiagram-v2
 sequenceDiagram
     participant User
     participant SessionViewModel
+    participant HomeViewModel
     participant SessionController
     participant SessionBuilder
     participant FormRepository
     participant SessionRepository
 
     User->>SessionViewModel: taps Start
-    SessionViewModel->>SessionBuilder: build(scope, order, belt, profile)
+    SessionViewModel->>HomeViewModel: buildSession()
+    HomeViewModel->>SessionBuilder: build(scope, order, belt, profile)
     SessionBuilder->>FormRepository: resolve(UUIDs)
     FormRepository-->>SessionBuilder: [TKDForm]
-    SessionBuilder-->>SessionViewModel: PracticeSession
-    SessionViewModel->>SessionController: init(session)
+    SessionBuilder-->>HomeViewModel: PracticeSession
+    HomeViewModel->>SessionController: init(session)
+    HomeViewModel-->>SessionViewModel: SessionController
 
     loop Per form
         User->>SessionViewModel: userTappedRetry()
@@ -161,6 +165,8 @@ graph LR
 PoomsaeFlow/
 ├── App/
 │   └── PoomsaeFlowApp.swift
+├── ContentView.swift                          ← composition root — instantiates concrete repos,
+│                                                wires ViewModels, handles -uitesting flag
 ├── Domain/
 │   ├── Models/
 │   │   ├── CanonicalBelt.swift
@@ -192,11 +198,14 @@ PoomsaeFlow/
 │   └── DataSources/
 │       └── FormsDataSource.swift
 ├── Presentation/
+│   ├── Common/
+│   │   └── Color+Hex.swift
 │   ├── Onboarding/
 │   │   ├── WelcomeView.swift
 │   │   ├── BeltSystemPickerView.swift
 │   │   ├── BeltPickerView.swift
-│   │   └── FamilyPickerView.swift
+│   │   ├── FamilyPickerView.swift
+│   │   └── OnboardingFlowState.swift
 │   ├── Home/
 │   │   └── HomeView.swift
 │   ├── Session/
@@ -211,15 +220,22 @@ PoomsaeFlow/
 │   └── FilterViewModel.swift
 ├── Resources/
 │   └── Assets.xcassets
-└── Tests/
-    ├── FormFilterServiceTests.swift
-    ├── SessionBuilderTests.swift
-    └── SessionControllerTests.swift
+├── PoomsaeFlowTests/
+│   ├── FormFilterServiceTests.swift
+│   ├── SessionBuilderTests.swift
+│   ├── SessionControllerTests.swift
+│   ├── HomeViewModelTests.swift
+│   └── OnboardingFlowStateTests.swift
+└── PoomsaeFlowUITests/
+    ├── AppLaunchTests.swift
+    ├── OnboardingUITests.swift
+    ├── PinnedFormsUITests.swift           ← intentionally failing — documents known bug
+    └── XCUIApplication+Helpers.swift
 ```
 
 ---
 
-## Build order (Step 1 → 6)
+## Build order (Step 1 → 6) — Historical, v1 complete
 
 ```mermaid
 gantt
@@ -250,3 +266,28 @@ gantt
     section Step 6
     UI — inside-out                  :s6, 5, 6
 ```
+
+---
+
+## DojangProfile — form catalog gating
+
+`DojangProfile.formIDs` is `Set<UUID>?`:
+- `nil` — no filter, all catalog forms are visible (Standard WT behavior in v1)
+- non-nil `Set` — only the listed UUIDs are eligible; membership tests dominate over iteration, which is why `Set` is used over `Array`
+- empty `Set` — no forms visible (different from `nil`; do not conflate the two)
+
+This nil-as-sentinel is the gating mechanism for v1.1 dojang-specific catalogs. When building a `DojangProfile` for a dojang that teaches all WT forms, set `formIDs` to `nil`, not to a full set of all UUIDs.
+
+---
+
+## Accessibility identifier convention
+
+Pattern: `<context>_<element_type>_<value>`
+
+Examples:
+- `belt_system_row_spartaTKD`
+- `belt_row_White`
+- `belt_form_row`
+- `pin_button`
+
+All UITest queries use this convention. Apply it to any new identifiers added for v1.1 UITests.

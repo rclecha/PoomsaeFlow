@@ -38,12 +38,12 @@ External          FormsDataSource (static) · UserDefaults · SwiftData · YouTu
 
 ---
 
-## Build steps
+## Build steps — Historical, v1 complete
 
 ### Step 1 — Core value types + static catalog
 **Goal:** Compilable foundation. No UI. No logic.
 
-Files to create:
+Files created:
 - `Domain/Models/CanonicalBelt.swift` — stable enum, source of truth for eligibility
 - `Domain/Models/FormFamily.swift`
 - `Domain/Models/VideoResource.swift`
@@ -59,19 +59,17 @@ Files to create:
 - `Domain/Preferences/SessionDefaults.swift`
 - `Domain/Preferences/PinnedForms.swift`
 - `Domain/Preferences/OnboardingState.swift`
-- `Data/DataSources/FormsDataSource.swift` — 23 forms, stable hardcoded UUIDs
-
-**Verification:** `swift build` passes cleanly.
+- `Data/DataSources/FormsDataSource.swift` — 29 forms, stable hardcoded UUIDs
 
 ---
 
 ### Step 2 — Filter and session services (TDD)
 **Goal:** Pure business logic. Tests written first.
 
-Files to create:
-- `Tests/FormFilterServiceTests.swift` — written first
+Files created:
+- `PoomsaeFlowTests/FormFilterServiceTests.swift`
 - `Domain/Services/FormFilterService.swift`
-- `Tests/SessionBuilderTests.swift` — written first
+- `PoomsaeFlowTests/SessionBuilderTests.swift`
 - `Domain/Services/SessionBuilder.swift` — sequential + shuffle-without-replacement
 
 `FormFilterService` is completely profile-agnostic. A Sparta TKD "Orange Advanced" belt maps to `.yellow` canonical — sees exactly the same forms as Standard WT Yellow.
@@ -81,8 +79,8 @@ Files to create:
 ### Step 3 — SessionController (TDD)
 **Goal:** All session state and outcome logic. Tests written first.
 
-Files to create:
-- `Tests/SessionControllerTests.swift` — written first
+Files created:
+- `PoomsaeFlowTests/SessionControllerTests.swift`
 - `Domain/Controllers/SessionController.swift`
 
 **Retry behavior:** Immediate repeat, not re-queue. `retryCount` tracks per-form retries. Index does not advance on retry. When the user finally passes, outcome is `.passedAfterRetry` if `retryCount > 0`, else `.passed`.
@@ -92,9 +90,9 @@ Files to create:
 ### Step 4 — Data layer
 **Goal:** Protocol-driven repositories. Repository pattern isolates storage.
 
-Files to create:
+Files created:
 - `Data/Repositories/FormRepository.swift` — protocol + implementation (UUID → `TKDForm` lookup)
-- `Data/Repositories/UserPrefsRepository.swift` — reads/writes all four preference structs + `DojangProfile`
+- `Data/Repositories/UserPrefsRepository.swift` — reads/writes all five preference structs + `DojangProfile`
 - `Data/Repositories/SessionRepository.swift` — **stub only** (protocol + empty implementations)
 
 ---
@@ -102,10 +100,11 @@ Files to create:
 ### Step 5 — ViewModels
 **Goal:** Thin coordination layer. No business logic.
 
-Files to create:
+Files created:
 - `ViewModels/HomeViewModel.swift`
 - `ViewModels/SessionViewModel.swift` — delegates to `SessionController`, exposes derived state
-- `ViewModels/FilterViewModel.swift`
+- `ViewModels/FilterViewModel.swift` — **sheet-scoped**: created when the filter sheet opens, discarded on close; not a screen-scoped peer to `HomeViewModel`
+- `Presentation/Onboarding/OnboardingFlowState.swift` — extracted into a separate `@Observable` class to enable unit testing of multi-step onboarding state independently of the view
 
 ---
 
@@ -137,9 +136,10 @@ Build order (inner components first):
 | Form catalog | Static Swift array | Repository pattern means one-file migration to remote JSON |
 | Session history | SwiftData `FormAttempt` | Powers v2 weakness engine — queries by form, date, outcome |
 | Belt eligibility | `CanonicalBelt` enum | Profile-agnostic, no special-casing when switching profiles |
-| User preferences | Four focused `Codable` structs | Avoids god object, each has its own `UserDefaults` key |
+| User preferences | Five focused `Codable` structs | Avoids god object, each has its own `UserDefaults` key |
 | Timestamps | `createdAt`/`updatedAt` on all persistent types | Schema consistency, required for `FormAttempt` immutability contract |
 | Black belt gating | All nine forms flat at `.black` | Dan-level gating is v2; logged as known limitation |
+| Dojang catalog gating | `DojangProfile.formIDs: Set<UUID>?` where `nil` = all forms | v1 sentinel meaning "no filter"; populated per-dojang in v1.1 |
 
 ---
 
@@ -153,7 +153,7 @@ Build order (inner components first):
 
 ---
 
-## Form catalog — 23 forms
+## Form catalog — 29 forms
 
 ### Keecho (introducedAt: `.white`, family: `.keecho`)
 | Form | Video |
@@ -197,20 +197,21 @@ Same belt introduction structure as Taegeuk. All Sparta TKD YouTube videos popul
 | `SessionDefaults` | UserDefaults | `com.ryan.PoomsaeFlow.sessionDefaults` |
 | `PinnedForms` | UserDefaults | `com.ryan.PoomsaeFlow.pinnedForms` |
 | `OnboardingState` | UserDefaults | `com.ryan.PoomsaeFlow.onboardingState` |
+| `DojangProfile?` (activeProfile) | UserDefaults | `com.ryan.PoomsaeFlow.activeProfile` — stores full encoded value; preset factory not available at read time |
 | `PracticeSession` | In-memory only | Built fresh each session, never persisted |
-| `FormsDataSource` | Static / compile-time | 23 forms, stable hardcoded UUIDs |
+| `FormsDataSource` | Static / compile-time | 29 forms, stable hardcoded UUIDs |
 | Belt presets | Static / compile-time | Seeded from `BeltSystemPreset.makeProfile()` |
 
 ---
 
 ## Version roadmap
 
-| Version | Focus |
-|---|---|
-| v1 | Solo training loop — core session experience |
-| v1.1 | Dojang-specific form catalogs, Kukkiwon YouTube fallbacks for black belt forms |
-| v2 | Weakness engine (frequency-weighted selection), stats view, custom dojang editor |
-| v3+ | Validate before expanding — no instructor mode, no Android, no shared backend |
+| Version | Focus | Status |
+|---|---|---|
+| v1 | Solo training loop — core session experience | Complete ✅ |
+| v1.1 | Dojang-specific form catalogs, Kukkiwon YouTube fallbacks for black belt forms | In progress |
+| v2 | Weakness engine (frequency-weighted selection), stats view, custom dojang editor | Planned |
+| v3+ | Validate before expanding — no instructor mode, no Android, no shared backend | Planned |
 
 ---
 
@@ -239,6 +240,7 @@ Bookmark icon in the top-right of the session card. One tap pins/unpins — no n
 - `FormAttempt.userID` is always a local anonymous UUID in v1 — field must exist
 - `BeltSystemPreset.custom` shows "coming soon" in UI — no implementation in v1
 - All persistent types carry `createdAt` and `updatedAt`
+- `ContentView` checks for `-uitesting` launch argument at startup and wipes `UserDefaults` — all UITest classes must pass this argument for clean test runs
 
 ## Patterns to avoid
 

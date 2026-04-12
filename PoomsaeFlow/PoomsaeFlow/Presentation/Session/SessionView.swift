@@ -116,6 +116,7 @@ struct SessionView: View {
                         Label("Watch on YouTube", systemImage: "play.rectangle.fill")
                     }
                     .padding(.top, 4)
+                    .accessibilityIdentifier("session_video_button")
                 }
             }
             .frame(maxWidth: .infinity)

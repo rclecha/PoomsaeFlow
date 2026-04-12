@@ -9,7 +9,9 @@ struct HomeView: View {
 
     @State private var selectedScope: SessionScope = .fullSet
     @State private var showBeltPicker = false
+    @State private var showSettings = false
     @State private var showSessionConfig = false
+    @State private var showPinnedManager = false
     @State private var activeSession: ActiveSession? = nil
 
     // MARK: - Body
@@ -24,8 +26,18 @@ struct HomeView: View {
                 }
                 .padding()
             }
+            .navigationDestination(isPresented: $showPinnedManager) {
+                PinnedFormsView(homeVM: homeVM)
+            }
             .navigationTitle("PoomsaeFlow")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Label("Settings", systemImage: "gearshape")
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showSessionConfig = true
@@ -48,6 +60,9 @@ struct HomeView: View {
                     showBeltPicker = false
                 }
             }
+        }
+        .sheet(isPresented: $showSettings) {
+            SchoolBeltSettingsView(homeVM: homeVM)
         }
         .sheet(isPresented: $showSessionConfig) {
             SessionConfigView(
@@ -133,18 +148,35 @@ struct HomeView: View {
                 selectedScope = .fullSet
             }
 
-            SessionTypeCard(
-                title: "Pinned forms",
-                subtitle: homeVM.pinnedForms.formIDs.isEmpty
-                    ? "No pinned forms yet"
-                    : "\(homeVM.pinnedForms.formIDs.count) pinned",
-                systemImage: "bookmark.fill",
-                isSelected: selectedScope == .pinned,
-                isEnabled: !homeVM.pinnedForms.formIDs.isEmpty
-            ) {
-                selectedScope = .pinned
+            HStack(alignment: .top, spacing: 0) {
+                SessionTypeCard(
+                    title: "Pinned forms",
+                    subtitle: homeVM.pinnedForms.formIDs.isEmpty
+                        ? "No pinned forms yet"
+                        : "\(homeVM.pinnedForms.formIDs.count) pinned",
+                    systemImage: "bookmark.fill",
+                    isSelected: selectedScope == .pinned,
+                    isEnabled: !homeVM.pinnedForms.formIDs.isEmpty
+                ) {
+                    selectedScope = .pinned
+                }
+                .accessibilityIdentifier("session_card_pinned")
+
+                Button {
+                    showPinnedManager = true
+                } label: {
+                    Text("Manage")
+                        .font(.caption)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.secondary.opacity(0.12))
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, 8)
+                .padding(.top, 12)
+                .accessibilityIdentifier("manage_pinned_button")
             }
-            .accessibilityIdentifier("session_card_pinned")
         }
     }
 

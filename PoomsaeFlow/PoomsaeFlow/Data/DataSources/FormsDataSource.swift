@@ -380,8 +380,6 @@ enum FormsDataSource {
 
     // MARK: - Black Belt
 
-    // Known gap: Jitae, Cheonkwon, Hansu, and Ilyo have no YouTube URLs yet.
-    // Their UUIDs are reserved so SwiftData history is not disrupted when videos are added.
     private static let blackBelt: [TKDForm] = [
         TKDForm(
             id: FormID.koryo,
@@ -464,7 +462,13 @@ enum FormsDataSource {
             koreanName: "지태",
             family: .blackBelt,
             introducedAt: .black,
-            videos: [],
+            videos: [
+                VideoResource(
+                    url: youtube("55Rfa_WVRZY"),
+                    source: VideoSource.kukkiwon,
+                    isPrimary: true
+                )
+            ],
             notes: nil
         ),
         TKDForm(
@@ -473,7 +477,13 @@ enum FormsDataSource {
             koreanName: "천권",
             family: .blackBelt,
             introducedAt: .black,
-            videos: [],
+            videos: [
+                VideoResource(
+                    url: youtube("-oyNEzqPvyA"),
+                    source: VideoSource.kukkiwon,
+                    isPrimary: true
+                )
+            ],
             notes: nil
         ),
         TKDForm(
@@ -482,7 +492,13 @@ enum FormsDataSource {
             koreanName: "한수",
             family: .blackBelt,
             introducedAt: .black,
-            videos: [],
+            videos: [
+                VideoResource(
+                    url: youtube("o-Gwkol3fvc"),
+                    source: VideoSource.kukkiwon,
+                    isPrimary: true
+                )
+            ],
             notes: nil
         ),
         TKDForm(
@@ -491,7 +507,13 @@ enum FormsDataSource {
             koreanName: "일여",
             family: .blackBelt,
             introducedAt: .black,
-            videos: [],
+            videos: [
+                VideoResource(
+                    url: youtube("jeZxhYwY--U"),
+                    source: VideoSource.kukkiwon,
+                    isPrimary: true
+                )
+            ],
             notes: nil
         ),
     ]

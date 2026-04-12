@@ -21,18 +21,11 @@ final class FilterViewModel {
 
     private(set) var enabledFamilies: [FormFamily]
 
-    /// All built-in dojang profiles, derived from BeltSystemPreset at init time.
-    /// Computed once and stored so the sheet never calls makeProfile() on every render.
-    let availableProfiles: [DojangProfile]
-
     // MARK: - Init
 
     init(userPrefs: UserPrefsRepository) {
         self.userPrefs = userPrefs
-
         enabledFamilies = userPrefs.sessionDefaults?.enabledFamilies ?? FormFamily.allCases
-
-        availableProfiles = BeltSystemPreset.allCases.map { $0.makeProfile() }
     }
 
     // MARK: - Mutations
@@ -45,10 +38,6 @@ final class FilterViewModel {
             enabledFamilies.append(family)
         }
         persistSessionDefaults()
-    }
-
-    func selectProfile(_ profile: DojangProfile) {
-        userPrefs.save(profile)
     }
 
     // MARK: - Private

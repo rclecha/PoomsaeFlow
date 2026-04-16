@@ -37,8 +37,8 @@ final class PinnedFormsUITests: XCTestCase {
 
         // After pinning, the Pinned card subtitle must update — this assertion documents the bug
         XCTAssertTrue(
-            app.staticTexts["1 pinned"].waitForExistence(timeout: 3),
-            "Pinned card should show '1 pinned' after pinning one form (known failing — bug not yet fixed)"
+            app.staticTexts["1 form"].waitForExistence(timeout: 3),
+            "Pinned card should show '1 form' after pinning one form (known failing — bug not yet fixed)"
         )
     }
 
@@ -50,8 +50,8 @@ final class PinnedFormsUITests: XCTestCase {
         pinBeltFormAtIndex(1)
 
         XCTAssertTrue(
-            app.staticTexts["2 pinned"].waitForExistence(timeout: 3),
-            "Pinned card should show '2 pinned' after pinning two forms (known failing — bug not yet fixed)"
+            app.staticTexts["2 forms"].waitForExistence(timeout: 3),
+            "Pinned card should show '2 forms' after pinning two forms (known failing — bug not yet fixed)"
         )
     }
 

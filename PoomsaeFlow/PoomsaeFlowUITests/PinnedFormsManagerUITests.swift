@@ -20,11 +20,11 @@ final class PinnedFormsManagerUITests: XCTestCase {
 
     // MARK: - Navigation
 
-    /// Tapping "Manage" on the pinned card opens PinnedFormsView.
-    func test_manageButton_opensPinnedFormsView() {
-        let manageButton = app.element(withIdentifier: "manage_pinned_button")
-        XCTAssertTrue(manageButton.waitForExistence(timeout: 3))
-        manageButton.tap()
+    /// Tapping the Pinned Forms card navigates to PinnedFormsView.
+    func test_pinnedCard_opensPinnedFormsView() {
+        let pinnedCard = app.element(withIdentifier: "session_card_pinned")
+        XCTAssertTrue(pinnedCard.waitForExistence(timeout: 3))
+        pinnedCard.tap()
 
         let nav = app.navigationBars["Pinned Forms"]
         XCTAssertTrue(nav.waitForExistence(timeout: 3), "PinnedFormsView should be visible")
@@ -34,9 +34,9 @@ final class PinnedFormsManagerUITests: XCTestCase {
 
     /// With no pinned forms, the manager shows the empty-state placeholder.
     func test_emptyManager_showsPlaceholder() {
-        let manageButton = app.element(withIdentifier: "manage_pinned_button")
-        XCTAssertTrue(manageButton.waitForExistence(timeout: 3))
-        manageButton.tap()
+        let pinnedCard = app.element(withIdentifier: "session_card_pinned")
+        XCTAssertTrue(pinnedCard.waitForExistence(timeout: 3))
+        pinnedCard.tap()
 
         XCTAssertTrue(
             app.staticTexts["No Pinned Forms"].waitForExistence(timeout: 3),
@@ -49,6 +49,10 @@ final class PinnedFormsManagerUITests: XCTestCase {
     /// Pinning a form from the browser causes it to appear in the manager list.
     func test_addFormViaFormBrowser_appearsInManager() {
         navigateToManager()
+
+        let editButton = app.element(withIdentifier: "edit_pinned_forms_button")
+        XCTAssertTrue(editButton.waitForExistence(timeout: 3))
+        editButton.tap()
 
         let addButton = app.element(withIdentifier: "add_forms_button")
         XCTAssertTrue(addButton.waitForExistence(timeout: 3))
@@ -131,9 +135,9 @@ final class PinnedFormsManagerUITests: XCTestCase {
 
         // Navigate away and back
         app.navigationBars["Pinned Forms"].buttons.firstMatch.tap()
-        let manageButton = app.element(withIdentifier: "manage_pinned_button")
-        XCTAssertTrue(manageButton.waitForExistence(timeout: 3))
-        manageButton.tap()
+        let pinnedCard = app.element(withIdentifier: "session_card_pinned")
+        XCTAssertTrue(pinnedCard.waitForExistence(timeout: 3))
+        pinnedCard.tap()
 
         let rowsAfter = app.descendants(matching: .any)
             .matching(NSPredicate(format: "identifier BEGINSWITH 'pinned_form_row_'"))
@@ -144,7 +148,7 @@ final class PinnedFormsManagerUITests: XCTestCase {
     // MARK: - Helpers
 
     private func navigateToManager() {
-        let manageButton = app.element(withIdentifier: "manage_pinned_button")
+        let manageButton = app.element(withIdentifier: "session_card_pinned")
         XCTAssertTrue(manageButton.waitForExistence(timeout: 3))
         manageButton.tap()
         XCTAssertTrue(app.navigationBars["Pinned Forms"].waitForExistence(timeout: 3))
@@ -152,6 +156,9 @@ final class PinnedFormsManagerUITests: XCTestCase {
 
     private func pinFirstAvailableForm() {
         navigateToManager()
+        let editButton = app.element(withIdentifier: "edit_pinned_forms_button")
+        XCTAssertTrue(editButton.waitForExistence(timeout: 3))
+        editButton.tap()
         let addButton = app.element(withIdentifier: "add_forms_button")
         XCTAssertTrue(addButton.waitForExistence(timeout: 3))
         addButton.tap()
@@ -166,6 +173,9 @@ final class PinnedFormsManagerUITests: XCTestCase {
 
     private func pinSecondAvailableForm() {
         navigateToManager()
+        let editButton = app.element(withIdentifier: "edit_pinned_forms_button")
+        XCTAssertTrue(editButton.waitForExistence(timeout: 3))
+        editButton.tap()
         let addButton = app.element(withIdentifier: "add_forms_button")
         XCTAssertTrue(addButton.waitForExistence(timeout: 3))
         addButton.tap()

@@ -131,9 +131,9 @@ final class SettingsSchoolSwitchUITests: XCTestCase {
                       "Belt card should show Sparta TKD after confirmed switch")
 
         // Verify Keecho Sam Jang is no longer in pinned manager
-        let manageButton = app.element(withIdentifier: "manage_pinned_button")
-        XCTAssertTrue(manageButton.waitForExistence(timeout: 3))
-        manageButton.tap()
+        let pinnedCard = app.element(withIdentifier: "session_card_pinned")
+        XCTAssertTrue(pinnedCard.waitForExistence(timeout: 3))
+        pinnedCard.tap()
 
         XCTAssertTrue(
             app.staticTexts["No Pinned Forms"].waitForExistence(timeout: 3),
@@ -172,11 +172,11 @@ final class SettingsSchoolSwitchUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["World Taekwondo"].waitForExistence(timeout: 3),
                       "Belt card should still show World Taekwondo after cancelling switch")
 
-        // Verify Keecho Sam Jang is still pinned — the pinned card subtitle shows "1 pinned"
-        // when exactly one form is pinned. This avoids tapping manage_pinned_button, which
-        // is not hittable immediately after the sheet dismiss animation completes.
+        // Verify Keecho Sam Jang is still pinned — the pinned card shows a badge pill with
+        // the count and a subtitle of "1 form". Checking the subtitle text avoids navigating
+        // to the manager, which is not reliable immediately after the sheet dismiss animation.
         XCTAssertTrue(
-            app.staticTexts["1 pinned"].waitForExistence(timeout: 3),
+            app.staticTexts["1 form"].waitForExistence(timeout: 3),
             "Keecho Sam Jang should still be pinned after cancelling the school switch"
         )
     }
@@ -194,9 +194,13 @@ final class SettingsSchoolSwitchUITests: XCTestCase {
     }
 
     private func pinFormNamed(_ name: String) {
-        let manageButton = app.element(withIdentifier: "manage_pinned_button")
-        XCTAssertTrue(manageButton.waitForExistence(timeout: 3))
-        manageButton.tap()
+        let pinnedCard = app.element(withIdentifier: "session_card_pinned")
+        XCTAssertTrue(pinnedCard.waitForExistence(timeout: 3))
+        pinnedCard.tap()
+
+        let editButton = app.element(withIdentifier: "edit_pinned_forms_button")
+        XCTAssertTrue(editButton.waitForExistence(timeout: 3))
+        editButton.tap()
 
         let addButton = app.element(withIdentifier: "add_forms_button")
         XCTAssertTrue(addButton.waitForExistence(timeout: 3))

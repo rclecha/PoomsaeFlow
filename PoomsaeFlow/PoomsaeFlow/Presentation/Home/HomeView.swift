@@ -148,35 +148,10 @@ struct HomeView: View {
                 selectedScope = .fullSet
             }
 
-            HStack(alignment: .top, spacing: 0) {
-                SessionTypeCard(
-                    title: "Pinned forms",
-                    subtitle: homeVM.pinnedForms.formIDs.isEmpty
-                        ? "No pinned forms yet"
-                        : "\(homeVM.pinnedForms.formIDs.count) pinned",
-                    systemImage: "bookmark.fill",
-                    isSelected: selectedScope == .pinned,
-                    isEnabled: !homeVM.pinnedForms.formIDs.isEmpty
-                ) {
-                    selectedScope = .pinned
-                }
-                .accessibilityIdentifier("session_card_pinned")
-
-                Button {
-                    showPinnedManager = true
-                } label: {
-                    Text("Manage")
-                        .font(.caption)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color.secondary.opacity(0.12))
-                        .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .padding(.leading, 8)
-                .padding(.top, 12)
-                .accessibilityIdentifier("manage_pinned_button")
+            PinnedFormsCard(count: homeVM.pinnedForms.formIDs.count) {
+                showPinnedManager = true
             }
+            .accessibilityIdentifier("session_card_pinned")
         }
     }
 
@@ -278,6 +253,55 @@ private struct BeltFormRow: View {
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("belt_form_row")
+    }
+}
+
+// MARK: - PinnedFormsCard
+
+private struct PinnedFormsCard: View {
+    let count: Int
+    let onTap: () -> Void
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "bookmark.fill")
+                .font(.title3)
+                .foregroundStyle(count > 0 ? Color.accentColor : Color.secondary)
+                .frame(width: 32)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Pinned forms")
+                    .fontWeight(.medium)
+                    .foregroundStyle(.primary)
+                Text(count == 0 ? "No pinned forms yet" : count == 1 ? "1 form" : "\(count) forms")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            if count > 0 {
+                Text("\(count)")
+                    .font(.caption.bold())
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.accentColor)
+                    .clipShape(Capsule())
+            }
+
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onTap)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
     }
 }
 

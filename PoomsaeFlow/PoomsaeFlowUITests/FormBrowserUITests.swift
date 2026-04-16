@@ -128,9 +128,13 @@ final class FormBrowserUITests: XCTestCase {
     // MARK: - Helpers
 
     private func openFormBrowser() {
-        let manageButton = app.element(withIdentifier: "manage_pinned_button")
-        XCTAssertTrue(manageButton.waitForExistence(timeout: 3))
-        manageButton.tap()
+        let pinnedCard = app.element(withIdentifier: "session_card_pinned")
+        XCTAssertTrue(pinnedCard.waitForExistence(timeout: 3))
+        pinnedCard.tap()
+
+        let editButton = app.element(withIdentifier: "edit_pinned_forms_button")
+        XCTAssertTrue(editButton.waitForExistence(timeout: 3))
+        editButton.tap()
 
         let addButton = app.element(withIdentifier: "add_forms_button")
         XCTAssertTrue(addButton.waitForExistence(timeout: 3))

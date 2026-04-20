@@ -51,7 +51,7 @@ final class FormBrowserUITests: XCTestCase {
 
     // MARK: - Pin interaction
 
-    /// Tapping a form's add button shows a checkmark (disabled state) on that row.
+    /// Tapping a form's add button switches its accessibility label to "Unpin …".
     func test_tappingPinButton_showsCheckmark() {
         openFormBrowser()
 
@@ -59,14 +59,20 @@ final class FormBrowserUITests: XCTestCase {
             .matching(NSPredicate(format: "identifier BEGINSWITH 'form_browser_pin_button_'"))
             .firstMatch
         XCTAssertTrue(firstPinButton.waitForExistence(timeout: 3))
+        let buttonID = firstPinButton.identifier
 
-        // Before tapping: button is enabled (plus icon)
+        // Before tapping: label starts with "Pin"
         XCTAssertTrue(firstPinButton.isEnabled, "Pin button should be enabled before pinning")
         firstPinButton.tap()
 
-        // After tapping: button is disabled (checkmark icon)
-        XCTAssertFalse(firstPinButton.isEnabled,
-                       "Pin button should be disabled (checkmark) after pinning")
+        // After tapping: label switches to "Unpin …" (pinned state), button stays enabled
+        let pinnedButton = app.buttons.matching(
+            NSPredicate(format: "identifier == '\(buttonID)' AND label BEGINSWITH 'Unpin'")
+        ).firstMatch
+        XCTAssertTrue(pinnedButton.waitForExistence(timeout: 2),
+                      "Pin button label should change to 'Unpin …' after pinning")
+        XCTAssertTrue(pinnedButton.isEnabled,
+                      "Pin button should remain enabled after pinning (tap again to unpin)")
     }
 
     /// After pinning a form in the browser, navigating to the Pinned Forms manager
@@ -90,8 +96,8 @@ final class FormBrowserUITests: XCTestCase {
                       "Pinned form should appear in the manager after pinning in browser")
     }
 
-    /// Already-pinned forms remain visible in the browser (not hidden) — they show as
-    /// disabled with a checkmark so the user can see what they've already added.
+    /// Already-pinned forms remain visible in the browser — they show a checkmark and
+    /// remain tappable (tap again to unpin).
     func test_alreadyPinnedForm_remainsVisibleInBrowser() {
         openFormBrowser()
 
@@ -103,10 +109,14 @@ final class FormBrowserUITests: XCTestCase {
         let pinnedButtonID = firstPinButton.identifier
         firstPinButton.tap()
 
-        // The same button should still be in the list but disabled
-        let pinnedButton = app.element(withIdentifier: pinnedButtonID)
-        XCTAssertTrue(pinnedButton.exists, "Already-pinned form must remain visible in browser")
-        XCTAssertFalse(pinnedButton.isEnabled, "Already-pinned form pin button must be disabled")
+        // The same button must still be in the list, enabled, with "Unpin …" label
+        let pinnedButton = app.buttons.matching(
+            NSPredicate(format: "identifier == '\(pinnedButtonID)' AND label BEGINSWITH 'Unpin'")
+        ).firstMatch
+        XCTAssertTrue(pinnedButton.waitForExistence(timeout: 2),
+                      "Already-pinned form must remain visible in browser with 'Unpin …' label")
+        XCTAssertTrue(pinnedButton.isEnabled,
+                      "Already-pinned form pin button must stay enabled so the user can unpin it")
     }
 
     // MARK: - Belt-level grouping

@@ -145,6 +145,94 @@ final class PinnedFormsManagerUITests: XCTestCase {
                           "First row should have changed after reorder")
     }
 
+    // MARK: - Start button visibility
+
+    /// "Start session" is disabled while edit mode is active and re-enabled on Done.
+    func test_startButton_hiddenInEditMode() {
+        pinFirstAvailableForm()
+        navigateToManager()
+
+        let startButton = app.element(withIdentifier: "start_pinned_session_button")
+        XCTAssertTrue(startButton.waitForExistence(timeout: 3), "Start button should be visible initially")
+        XCTAssertTrue(startButton.isEnabled, "Start button should be enabled before entering edit mode")
+
+        let editButton = app.element(withIdentifier: "edit_pinned_forms_button")
+        editButton.tap()
+
+        XCTAssertTrue(startButton.exists, "Start button should still exist in edit mode")
+        XCTAssertFalse(startButton.isEnabled, "Start button should be disabled in edit mode")
+
+        editButton.tap() // Done
+        XCTAssertTrue(startButton.isEnabled, "Start button should be re-enabled after leaving edit mode")
+    }
+
+    // MARK: - Unpin from browser
+
+    /// Tapping an already-pinned form in the browser unpins it.
+    func test_unpinFromBrowser_removesFormFromManager() {
+        pinFirstAvailableForm()
+        navigateToManager()
+
+        // Confirm one form is pinned
+        let firstRow = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH 'pinned_form_row_'"))
+            .firstMatch
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 3), "One form should be pinned")
+
+        // Open the browser and tap the same form's button to unpin it
+        let editButton = app.element(withIdentifier: "edit_pinned_forms_button")
+        editButton.tap()
+        let addButton = app.element(withIdentifier: "add_forms_button")
+        XCTAssertTrue(addButton.waitForExistence(timeout: 3))
+        addButton.tap()
+
+        let firstPinButton = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH 'form_browser_pin_button_'"))
+            .firstMatch
+        XCTAssertTrue(firstPinButton.waitForExistence(timeout: 3))
+        firstPinButton.tap() // was pinned — now unpins
+
+        app.navigationBars["Add Forms"].buttons.firstMatch.tap()
+
+        // We return to PinnedFormsView still in edit mode; the ContentUnavailableView overlay
+        // is only shown when editMode == .inactive, so exit edit mode before asserting.
+        let doneButton = app.element(withIdentifier: "edit_pinned_forms_button")
+        XCTAssertTrue(doneButton.waitForExistence(timeout: 3))
+        doneButton.tap()
+
+        XCTAssertTrue(
+            app.staticTexts["No Pinned Forms"].waitForExistence(timeout: 3),
+            "Manager should show empty state after unpinning the only form from the browser"
+        )
+    }
+
+    // MARK: - Start practice session
+
+    /// With pinned forms present, "Start practice session" opens Session Setup.
+    func test_startPracticeSession_opensSessionSetup() {
+        pinFirstAvailableForm()
+        navigateToManager()
+
+        let startButton = app.element(withIdentifier: "start_pinned_session_button")
+        XCTAssertTrue(startButton.waitForExistence(timeout: 3))
+        XCTAssertTrue(startButton.isEnabled, "Start button should be enabled when forms are pinned")
+        startButton.tap()
+
+        XCTAssertTrue(
+            app.navigationBars["Session Setup"].waitForExistence(timeout: 3),
+            "Session Setup sheet should appear after tapping Start"
+        )
+    }
+
+    /// With no pinned forms, "Start practice session" is disabled.
+    func test_startPracticeSession_disabledWhenEmpty() {
+        navigateToManager()
+
+        let startButton = app.element(withIdentifier: "start_pinned_session_button")
+        XCTAssertTrue(startButton.waitForExistence(timeout: 3))
+        XCTAssertFalse(startButton.isEnabled, "Start button should be disabled when no forms are pinned")
+    }
+
     // MARK: - Helpers
 
     private func navigateToManager() {
@@ -179,19 +267,15 @@ final class PinnedFormsManagerUITests: XCTestCase {
         let addButton = app.element(withIdentifier: "add_forms_button")
         XCTAssertTrue(addButton.waitForExistence(timeout: 3))
         addButton.tap()
-        let unpinnedButtons = app.descendants(matching: .any)
+        let pinButtons = app.descendants(matching: .any)
             .matching(NSPredicate(format: "identifier BEGINSWITH 'form_browser_pin_button_'"))
-        // The first is now pinned (checkmark/disabled); find the second enabled one
-        var tapped = false
-        for i in 0..<unpinnedButtons.count {
-            let btn = unpinnedButtons.element(boundBy: i)
-            if btn.isEnabled {
-                btn.tap()
-                tapped = true
-                break
-            }
+        // The first form is already pinned. Tap index 1 to pin a different form.
+        // (All buttons are now enabled — pinned buttons toggle to unpin, so we skip index 0.)
+        guard pinButtons.count >= 2 else {
+            XCTFail("Need at least 2 forms in the browser to pin a second form")
+            return
         }
-        XCTAssertTrue(tapped, "Could not find a second unpinned form to pin")
+        pinButtons.element(boundBy: 1).tap()
         app.navigationBars["Add Forms"].buttons.firstMatch.tap()
         app.navigationBars["Pinned Forms"].buttons.firstMatch.tap()
     }

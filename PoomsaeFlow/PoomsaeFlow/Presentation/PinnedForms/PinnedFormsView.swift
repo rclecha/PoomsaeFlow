@@ -1,15 +1,21 @@
 import SwiftUI
 
-/// Primary screen for managing the user's training list.
+/// Primary screen for managing and practicing pinned forms.
 ///
-/// Shows pinned forms in their stored order, supports swipe-to-delete and drag-to-reorder.
-/// Tapping "Edit" reveals delete handles, reorder handles, and an "Add forms" row at the
-/// bottom. All mutations route through HomeViewModel — this view holds zero business logic.
+/// A "Start session" button lives in the bottom toolbar — disabled when no forms are
+/// pinned or when edit mode is active. Pinned forms are shown in their stored order
+/// with swipe-to-delete and drag-to-reorder. Tapping "Edit" reveals delete handles,
+/// reorder handles, and an "Add forms" row at the bottom. All mutations route through
+/// HomeViewModel — this view holds zero business logic.
 struct PinnedFormsView: View {
     var homeVM: HomeViewModel
+    /// Called when the user confirms Session Setup. The parent (HomeView) owns the
+    /// active session state and fullScreenCover — this view only triggers the flow.
+    let onStartSession: (SessionScope, SessionOrder, [FormFamily]) -> Void
 
     @State private var editMode: EditMode = .inactive
     @State private var showBrowser = false
+    @State private var showSessionConfig = false
 
     var body: some View {
         List {
@@ -38,6 +44,15 @@ struct PinnedFormsView: View {
             }
         }
         .environment(\.editMode, $editMode)
+        .overlay {
+            if homeVM.resolvedPinnedForms.isEmpty && editMode == .inactive {
+                ContentUnavailableView(
+                    "No Pinned Forms",
+                    systemImage: "bookmark",
+                    description: Text("Tap Edit to add forms to your training list")
+                )
+            }
+        }
         .navigationDestination(isPresented: $showBrowser) {
             FormBrowserView(homeVM: homeVM)
         }
@@ -50,14 +65,26 @@ struct PinnedFormsView: View {
                 }
                 .accessibilityIdentifier("edit_pinned_forms_button")
             }
+            ToolbarItem(placement: .bottomBar) {
+                Button {
+                    showSessionConfig = true
+                } label: {
+                    Label("Start session", systemImage: "play.fill")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(homeVM.resolvedPinnedForms.isEmpty || editMode == .active)
+                .accessibilityIdentifier("start_pinned_session_button")
+            }
         }
-        .overlay {
-            if homeVM.resolvedPinnedForms.isEmpty && editMode == .inactive {
-                ContentUnavailableView(
-                    "No Pinned Forms",
-                    systemImage: "bookmark",
-                    description: Text("Tap Edit to add forms to your training list")
-                )
+        .sheet(isPresented: $showSessionConfig) {
+            SessionConfigView(
+                eligibleForms: homeVM.resolvedPinnedForms,
+                initialOrder: homeVM.sessionDefaults.defaultOrder,
+                initialFamilies: homeVM.sessionDefaults.enabledFamilies
+            ) { order, families in
+                onStartSession(.pinned, order, families)
             }
         }
     }

@@ -4,8 +4,8 @@ import SwiftUI
 ///
 /// Shows all forms the user is eligible to practice (dojang-catalog-scoped, belt-capped,
 /// no family filter), grouped by the belt level at which each form is introduced.
-/// Already-pinned forms appear with a checkmark and disabled button so the user can
-/// see at a glance what they've already added.
+/// Tapping a row toggles its pinned state — a checkmark means pinned (tap to remove),
+/// a plus means unpinned (tap to add).
 struct FormBrowserView: View {
     var homeVM: HomeViewModel
 
@@ -19,7 +19,11 @@ struct FormBrowserView: View {
                             form: form,
                             isPinned: homeVM.pinnedForms.formIDs.contains(form.id)
                         ) {
-                            homeVM.pinForm(form.id)
+                            if homeVM.pinnedForms.formIDs.contains(form.id) {
+                                homeVM.unpinForm(form.id)
+                            } else {
+                                homeVM.pinForm(form.id)
+                            }
                         }
                     }
                 }
@@ -77,7 +81,7 @@ struct FormBrowserView: View {
 private struct FormBrowserRow: View {
     let form: TKDForm
     let isPinned: Bool
-    let onPin: () -> Void
+    let onToggle: () -> Void
 
     var body: some View {
         HStack(spacing: 14) {
@@ -92,13 +96,13 @@ private struct FormBrowserRow: View {
 
             Spacer()
 
-            Button(action: onPin) {
+            Button(action: onToggle) {
                 Image(systemName: isPinned ? "checkmark.circle.fill" : "plus.circle")
                     .font(.title3)
                     .foregroundStyle(isPinned ? Color.accentColor : Color.secondary)
             }
-            .disabled(isPinned)
             .buttonStyle(.plain)
+            .accessibilityLabel(isPinned ? "Unpin \(form.name)" : "Pin \(form.name)")
             .accessibilityIdentifier("form_browser_pin_button_\(form.id)")
         }
         .padding(.vertical, 2)

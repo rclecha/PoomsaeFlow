@@ -215,11 +215,14 @@ final class SettingsSchoolSwitchUITests: XCTestCase {
         XCTAssertTrue(pinButton.waitForExistence(timeout: 3), "Pin button not found for '\(name)'")
         pinButton.tap()
 
-        // Verify the pin registered — the button should now be disabled (form is pinned)
-        // If this fails, the tap hit the container rather than the button action
-        let pinnedButton = app.buttons["form_browser_pin_button_00000001-0000-0000-0000-000000000003"]
-        XCTAssertTrue(pinnedButton.waitForExistence(timeout: 2))
-        XCTAssertFalse(pinnedButton.isEnabled, "Pin button should be disabled after pinning")
+        // Verify the pin registered — the button now shows a checkmark (toggled to pinned state).
+        // Since pinned buttons are no longer disabled, check that the button's accessibility
+        // label switched to "Unpin …", which only happens after a successful pin.
+        let pinnedButton = app.buttons.matching(
+            NSPredicate(format: "identifier == 'form_browser_pin_button_00000001-0000-0000-0000-000000000003' AND label BEGINSWITH 'Unpin'")
+        ).firstMatch
+        XCTAssertTrue(pinnedButton.waitForExistence(timeout: 2),
+                      "Pin button label should change to 'Unpin …' after pinning, confirming the tap registered")
 
         // Navigate back to home
         app.navigationBars.buttons.firstMatch.tap()

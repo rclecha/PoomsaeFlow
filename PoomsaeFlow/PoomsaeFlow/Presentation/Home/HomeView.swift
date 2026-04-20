@@ -27,7 +27,9 @@ struct HomeView: View {
                 .padding()
             }
             .navigationDestination(isPresented: $showPinnedManager) {
-                PinnedFormsView(homeVM: homeVM)
+                PinnedFormsView(homeVM: homeVM) { scope, order, families in
+                    startSession(scope: scope, order: order, families: families)
+                }
             }
             .navigationTitle("PoomsaeFlow")
             .toolbar {

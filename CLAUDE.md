@@ -85,6 +85,16 @@ scoped for v2:
 - Kukkiwon YouTube fallbacks for Jitae, Cheonkwon, Hansu, Ilyo
 - Expanded UITest suite
 
+## v1.2 scope (shipped)
+- Pinned Forms made fully functional for practice sessions via a bottom toolbar
+  "Start session" button triggering SessionConfigView
+- PinnedFormsView redesigned as a hub screen (navigate from HomeView, practice or
+  manage from within)
+- FormBrowserView made bidirectional — tapping a pinned form unpins it
+- Start session button disabled in edit mode and when no forms are pinned
+- EditButton() replaced with manual editMode state (unreliable on device in iOS 26)
+- 73 tests passing (up from 71)
+
 ## v2 scope (do not build yet)
 - Weakness engine
 - Stats view

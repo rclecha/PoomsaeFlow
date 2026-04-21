@@ -209,7 +209,8 @@ Same belt introduction structure as Taegeuk. All Sparta TKD YouTube videos popul
 | Version | Focus | Status |
 |---|---|---|
 | v1 | Solo training loop — core session experience | Complete ✅ |
-| v1.1 | Dojang-specific form catalogs, Kukkiwon YouTube fallbacks for black belt forms | In progress |
+| v1.1 | Dojang-specific form catalogs, Kukkiwon YouTube fallbacks for black belt forms | Complete ✅ |
+| v1.2 | Pinned Forms practice sessions, PinnedFormsView hub screen, bidirectional FormBrowserView | Complete ✅ |
 | v2 | Weakness engine (frequency-weighted selection), stats view, custom dojang editor | Planned |
 | v3+ | Validate before expanding — no instructor mode, no Android, no shared backend | Planned |
 

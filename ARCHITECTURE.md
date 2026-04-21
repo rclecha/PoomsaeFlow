@@ -212,8 +212,13 @@ PoomsaeFlow/
 │   │   ├── SessionConfigView.swift
 │   │   ├── SessionView.swift
 │   │   └── SessionCompleteView.swift
-│   └── FormDetail/
-│       └── FormDetailView.swift
+│   ├── FormDetail/
+│   │   └── FormDetailView.swift
+│   ├── PinnedForms/
+│   │   ├── PinnedFormsView.swift
+│   │   └── FormBrowserView.swift
+│   └── Settings/
+│       └── SchoolBeltSettingsView.swift
 ├── ViewModels/
 │   ├── HomeViewModel.swift
 │   ├── SessionViewModel.swift
@@ -228,8 +233,12 @@ PoomsaeFlow/
 │   └── OnboardingFlowStateTests.swift
 └── PoomsaeFlowUITests/
     ├── AppLaunchTests.swift
+    ├── FormBrowserUITests.swift
     ├── OnboardingUITests.swift
+    ├── PinnedFormsManagerUITests.swift
     ├── PinnedFormsUITests.swift           ← intentionally failing — documents known bug
+    ├── SettingsSchoolSwitchUITests.swift
+    ├── VideoResourceUITests.swift
     └── XCUIApplication+Helpers.swift
 ```
 

@@ -37,26 +37,26 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for full diagrams and [IMPLEMENTATION_P
 
 > **Read `CLAUDE.md` before writing any code.**
 
-v1 is complete. See `IMPLEMENTATION_PLAN.md` for architecture decisions and the version roadmap for what's next.
+v1, v1.1, and v1.2 are complete. See `IMPLEMENTATION_PLAN.md` for architecture decisions and the version roadmap for what's next.
 
 ## Testing
 
 - **Unit tests:** 5 test files — TDD coverage for all services and controllers, `HomeViewModel`, and `OnboardingFlowState`
-- **UITests:** 3 test classes covering app launch, onboarding flow, and pinned forms
+- **UITests:** 7 test classes — `AppLaunchTests`, `OnboardingUITests`, `PinnedFormsUITests`, `PinnedFormsManagerUITests`, `FormBrowserUITests`, `SettingsSchoolSwitchUITests`, `VideoResourceUITests`
 - Run UITests with the `-uitesting` launch argument — this resets `UserDefaults` for a clean state on each run
-- **Total: 42 tests, all passing at v1.0**
+- **Total: 73 tests, all passing**
 
 ## Known v1 limitations
 
 - `BeltSystemPreset.custom` shows "coming soon" — not implemented in v1
 - `SessionRepository` is a no-op stub — session history persistence is v2
-- Jitae, Cheonkwon, Hansu, and Ilyo have no YouTube video URLs in v1
 
 ## Version roadmap
 
-| Version | Focus |
-|---|---|
-| v1 | Solo training loop |
-| v1.1 | Dojang-specific catalogs, Kukkiwon fallbacks |
-| v2 | Weakness engine, stats view, custom dojang editor |
-| v3+ | Validate before expanding |
+| Version | Focus | Status |
+|---|---|---|
+| v1 | Solo training loop | Complete ✅ |
+| v1.1 | Dojang-specific catalogs, Kukkiwon fallbacks | Complete ✅ |
+| v1.2 | Pinned Forms practice sessions, UX polish, and UITest expansion | Complete ✅ |
+| v2 | Weakness engine, stats view, custom dojang editor | Planned |
+| v3+ | Validate before expanding | Planned |

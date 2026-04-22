@@ -44,18 +44,24 @@ jobs:
             -only-testing:PoomsaeFlowTests \
             -parallel-testing-enabled YES \
             -enableCodeCoverage YES \
+            -resultBundlePath build/DerivedData/result.xcresult \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Convert coverage to lcov
-        uses: maxep/xcodebuild-lcov-action@0.1.0
-        with:
-          derived-data-path: build/DerivedData
-          target: PoomsaeFlow.app
-          output-file: coverage/lcov.info
-
-      - name: Post coverage report on PR
-        if: github.event_name == 'pull_request'
-        uses: romeovs/lcov-reporter-action@v0.2.21
-        with:
-          lcov-file: coverage/lcov.info
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p coverage
+          XCRESULT="build/DerivedData/result.xcresult"
+          echo "Found xcresult: $XCRESULT"
+          xcrun xccov view --report --json "$XCRESULT" > coverage/coverage.json
+          echo "Coverage JSON generated"
+          cat coverage/coverage.json | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          targets = data.get('targets', [])
+          for target in targets:
+              files = target.get('files', [])
+              for f in files:
+                  path = f.get('path', '')
+                  pct = f.get('lineCoverage', 0) * 100
+                  print(f'{path}: {pct:.1f}%')
+          "

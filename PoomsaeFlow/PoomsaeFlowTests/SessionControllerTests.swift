@@ -79,6 +79,17 @@ final class SessionControllerTests: XCTestCase {
         XCTAssertEqual(controller.attempts.last?.outcome, .passedAfterRetry)
     }
 
+    /// Two retries then pass — outcome must still be .passedAfterRetry and the attempt
+    /// must carry the full count so the summary can display it accurately.
+    func test_multipleRetries_thenPassed_recordsPassedAfterRetryWithCorrectCount() {
+        let controller = makeController(formCount: 3)
+        controller.recordOutcome(.retry)
+        controller.recordOutcome(.retry)
+        controller.recordOutcome(.passed)
+        XCTAssertEqual(controller.attempts.last?.outcome, .passedAfterRetry)
+        XCTAssertEqual(controller.attempts.last?.retryCount, 2)
+    }
+
     /// A pass with no prior retries must still be .passed, not .passedAfterRetry.
     func test_passedWithNoRetries_recordsPassed() {
         let controller = makeController(formCount: 3)
@@ -99,6 +110,16 @@ final class SessionControllerTests: XCTestCase {
         controller.recordOutcome(.retry)
         controller.recordOutcome(.skipped)
         XCTAssertEqual(controller.retryCount, 0)
+    }
+
+    /// Regression: the controller must preserve retryCount on the FormAttempt even when
+    /// the terminal outcome is .skipped. SessionCompleteView reads this field to surface
+    /// retry information in the session summary.
+    func test_skippedAfterRetry_preservesRetryCountOnAttempt() {
+        let controller = makeController(formCount: 3)
+        controller.recordOutcome(.retry)
+        controller.recordOutcome(.skipped)
+        XCTAssertEqual(controller.attempts.last?.retryCount, 1)
     }
 
     // MARK: - Attempts log

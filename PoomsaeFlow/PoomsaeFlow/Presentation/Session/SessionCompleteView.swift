@@ -10,9 +10,10 @@ struct SessionCompleteView: View {
         attempts.filter { $0.outcome == .passed }.count
     }
 
-    // "Retried" = eventually passed after one or more retries
-    private var retriedCount: Int {
-        attempts.filter { $0.outcome == .passedAfterRetry }.count
+    // "Retried" = one or more retries occurred, regardless of whether the form was
+    // eventually nailed or skipped. retryCount > 0 is the authoritative signal.
+    var retriedCount: Int {
+        attempts.filter { $0.retryCount > 0 }.count
     }
 
     private var skippedCount: Int {

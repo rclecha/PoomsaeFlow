@@ -7,7 +7,7 @@ Personal iOS poomsae training companion. SwiftUI, iOS 17+, SwiftData, no third-p
 **Author:** Ryan  
 **Dojang:** Sparta TKD, Walnut Creek CA  
 **Stack:** SwiftUI · iOS 17+ · Xcode 16+ · SwiftData  
-**CI:** Xcode Cloud  
+**CI:** GitHub Actions (macos-26, unit tests on push to main and every PR)  
 
 ---
 
@@ -211,6 +211,8 @@ Same belt introduction structure as Taegeuk. All Sparta TKD YouTube videos popul
 | v1 | Solo training loop — core session experience | Complete ✅ |
 | v1.1 | Dojang-specific form catalogs, Kukkiwon YouTube fallbacks for black belt forms | Complete ✅ |
 | v1.2 | Pinned Forms practice sessions, PinnedFormsView hub screen, bidirectional FormBrowserView | Complete ✅ |
+| v1.3 | Session UX (retry badge, shake, haptic), home nav refactor, CI pipeline, summary bug fixes | Complete ✅ |
+| v1.4 | CD signing fix (TestFlight), PR coverage comments, coverage + refactor audits | Planned |
 | v2 | Weakness engine (frequency-weighted selection), stats view, custom dojang editor | Planned |
 | v3+ | Validate before expanding — no instructor mode, no Android, no shared backend | Planned |
 
@@ -230,6 +232,39 @@ After onboarding → Home screen. Belt card on Home is always tappable to re-ent
 ## Pin affordance
 
 Bookmark icon in the top-right of the session card. One tap pins/unpins — no navigation required. Filled amber bookmark = pinned. Outlined gray bookmark = unpinned. Brief toast confirms the action ("Pinned" / "Unpinned"). Haptic feedback on tap (`.impactOccurred()`). First session only: "Tap to pin" hint label appears below the icon, hidden after `OnboardingState.hasSeenPinHint` is set.
+
+---
+
+---
+
+## v1.3 — Session UX + bug fixes
+
+### Bug fixes
+
+**`SessionCompleteView.retriedCount`** — changed from `filter { retryCount > 0 }.count` (number of forms that had any retry) to `reduce(0) { $0 + $1.retryCount }` (total retry taps across all forms). Label renamed from "Needed retries" to "Retry attempts".
+
+**`SessionCompleteView.nailedCount`** — changed from `outcome == .passed` to `outcome == .passed || outcome == .passedAfterRetry`. Forms retried then nailed were previously excluded from the "Nailed it" row.
+
+### Session screen UX
+
+**Retry badge** — amber pill overlay (top-trailing) on the form card. Shows "↺ 1 retry" / "↺ N retries" while `currentFormRetryCount > 0`. State is local to `SessionView` (`@State private var currentFormRetryCount`), not read from `SessionController`, and resets to 0 when advancing to the next form via Skip or Nailed it.
+
+**ShakeEffect** — new `GeometryEffect` at `Presentation/Shared/ShakeEffect.swift`. Applied to the form card via `.modifier(ShakeEffect(animatableData: shakeCount))`. `shakeCount` is incremented on each Retry tap and reset on form advance.
+
+**Haptic** — `UIImpactFeedbackGenerator(style: .light).impactOccurred()` fires on every Retry tap.
+
+### Home screen navigation
+
+Removed the top-right toolbar play button. The Full Set card (`SessionTypeCard`) now sets `showSessionConfig = true` on tap, opening `SessionConfigView` directly. The card was already wired to `selectedScope = .fullSet`; adding the config sheet presentation completes the entry point. Pinned Forms and Belt Forms entry points unchanged.
+
+### CI / CD
+
+GitHub Actions workflow on `macos-26`. Unit tests run on every push to `main` and every PR (~5 min). Per-file code coverage printed to the run log via `xcrun xccov`. CD workflow triggers after CI passes but is blocked on provisioning — Automatic signing fails on a fresh runner. Fix deferred to v1.4: export `.p12` + provisioning profile, store as GitHub Secrets, switch to `CODE_SIGN_STYLE=Manual`.
+
+### New tests (86 total, up from 73)
+
+- `SessionCompleteViewTests` — `test_retriedCount_sumsAllRetryTaps`, `test_nailedCount_includesPassedAfterRetry`
+- `SessionUITests` — `test_fullSetCard_opensSessionSetup`, `test_homeScreen_hasNoPlayButtonInToolbar`
 
 ---
 

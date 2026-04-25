@@ -7,6 +7,8 @@ struct SessionView: View {
 
     @State private var showPinHint: Bool
     @State private var showComplete = false
+    @State private var currentFormRetryCount: Int = 0
+    @State private var shakeCount: CGFloat = 0
     @Environment(\.openURL) private var openURL
 
     init(
@@ -123,6 +125,21 @@ struct SessionView: View {
             .padding(24)
             .background(Color(.secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(alignment: .topTrailing) {
+                if currentFormRetryCount > 0 {
+                    Text(currentFormRetryCount == 1 ? "↺ 1 retry" : "↺ \(currentFormRetryCount) retries")
+                        .font(.caption)
+                        .bold()
+                        .foregroundStyle(Color(red: 0.961, green: 0.620, blue: 0.043))
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 10)
+                        .background(Color(red: 0.961, green: 0.620, blue: 0.043).opacity(0.15))
+                        .clipShape(Capsule())
+                        .padding(.trailing, 8)
+                        .padding(.top, 10)
+                }
+            }
+            .modifier(ShakeEffect(animatableData: shakeCount))
             .padding(.horizontal)
             .padding(.top, 16)
 
@@ -146,15 +163,22 @@ struct SessionView: View {
             HStack(spacing: 12) {
                 Button("Retry") {
                     sessionViewModel.userTappedRetry()
+                    currentFormRetryCount += 1
+                    withAnimation(.default) { shakeCount += 1 }
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 }
                 .buttonStyle(.bordered)
 
                 Button("Skip") {
+                    currentFormRetryCount = 0
+                    shakeCount = 0
                     sessionViewModel.userTappedSkip()
                 }
                 .buttonStyle(.bordered)
 
                 Button("Nailed it") {
+                    currentFormRetryCount = 0
+                    shakeCount = 0
                     sessionViewModel.userTappedNailed()
                 }
                 .buttonStyle(.borderedProminent)

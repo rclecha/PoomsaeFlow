@@ -40,14 +40,6 @@ struct HomeView: View {
                         Label("Settings", systemImage: "gearshape")
                     }
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showSessionConfig = true
-                    } label: {
-                        Label("Start", systemImage: "play.fill")
-                    }
-                    .disabled(homeVM.eligibleForms.isEmpty)
-                }
             }
         }
         .sheet(isPresented: $showBeltPicker) {
@@ -148,6 +140,7 @@ struct HomeView: View {
                 isEnabled: !homeVM.eligibleForms.isEmpty
             ) {
                 selectedScope = .fullSet
+                showSessionConfig = true
             }
 
             PinnedFormsCard(count: homeVM.pinnedForms.formIDs.count) {

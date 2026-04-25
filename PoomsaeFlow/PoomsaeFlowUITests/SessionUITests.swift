@@ -21,6 +21,34 @@ final class SessionUITests: XCTestCase {
         super.tearDown()
     }
 
+    // MARK: - Full Set card
+
+    /// Tapping the Full Set card must open the Session Setup sheet.
+    /// Replaces the removed toolbar play button as the primary entry point for a full-set session.
+    func test_fullSetCard_opensSessionSetup() {
+        let fullSetCard = app.staticTexts["Full set"]
+        XCTAssertTrue(fullSetCard.waitForExistence(timeout: 3),
+                      "Full Set card must be visible on the home screen")
+        fullSetCard.tap()
+
+        XCTAssertTrue(
+            app.navigationBars["Session Setup"].waitForExistence(timeout: 3),
+            "Tapping the Full Set card must open the Session Setup sheet"
+        )
+    }
+
+    /// The toolbar play button must no longer appear on the home screen.
+    func test_homeScreen_hasNoPlayButtonInToolbar() {
+        XCTAssertTrue(
+            app.navigationBars["PoomsaeFlow"].waitForExistence(timeout: 3),
+            "Home screen must be visible before asserting button absence"
+        )
+        XCTAssertFalse(
+            app.buttons["Start"].exists,
+            "Play button must no longer appear in the home screen toolbar"
+        )
+    }
+
     // MARK: - Retry → Skip
 
     /// Tapping Retry then Skip must record the retry in the session summary.
@@ -29,9 +57,9 @@ final class SessionUITests: XCTestCase {
     /// .passedAfterRetry outcomes, silently ignoring .skipped attempts with retryCount > 0.
     ///
     /// Expected summary for a 1-form retry → skip session:
-    ///   Nailed it      0
-    ///   Needed retries 1   ← would show 0 before the fix
-    ///   Skipped        1
+    ///   Nailed it       0
+    ///   Retry attempts  1   ← would show 0 before the fix
+    ///   Skipped         1
     func test_retryThenSkip_summaryShowsNeededRetriesOne() {
         // Start a single-form session from the Belt Forms section
         let firstRow = app.elements(withIdentifier: "belt_form_row").firstMatch
@@ -57,21 +85,21 @@ final class SessionUITests: XCTestCase {
             "Session Complete screen must appear after the only form is skipped"
         )
 
-        // "Needed retries" label must be present in the summary table
+        // "Retry attempts" label must be present in the summary table
         XCTAssertTrue(
-            app.staticTexts["Needed retries"].exists,
-            "'Needed retries' label must appear in the session summary"
+            app.staticTexts["Retry attempts"].exists,
+            "'Retry attempts' label must appear in the session summary"
         )
 
         // SummaryRow renders label and count as separate Text elements (no .combine modifier).
         // In a 1-form retry→skip session the count column shows: 0, 1, 1.
-        // Exactly two staticTexts with label "1" proves Needed retries = 1.
-        // Before the fix, Needed retries showed 0, leaving only one "1" (Skipped).
+        // Exactly two staticTexts with label "1" proves Retry attempts = 1.
+        // Before the fix, Retry attempts showed 0, leaving only one "1" (Skipped).
         let oneLabels = app.staticTexts.matching(NSPredicate(format: "label == '1'"))
         XCTAssertEqual(
             oneLabels.count, 2,
-            "'Needed retries' and 'Skipped' must each show 1. " +
-            "Count of 1 means Needed retries is still showing 0 — retry was not counted."
+            "'Retry attempts' and 'Skipped' must each show 1. " +
+            "Count of 1 means Retry attempts is still showing 0 — retry was not counted."
         )
     }
 }

@@ -5,15 +5,14 @@ struct SessionCompleteView: View {
     let onGoAgain: () -> Void
     let onDone: () -> Void
 
-    // "Nailed" = passed on the first attempt (no retries recorded)
-    private var nailedCount: Int {
-        attempts.filter { $0.outcome == .passed }.count
+    // "Nailed" = passed, whether on the first attempt or after retries.
+    var nailedCount: Int {
+        attempts.filter { $0.outcome == .passed || $0.outcome == .passedAfterRetry }.count
     }
 
-    // "Retried" = one or more retries occurred, regardless of whether the form was
-    // eventually nailed or skipped. retryCount > 0 is the authoritative signal.
+    // "Retry attempts" = total number of retry taps across all forms in the session.
     var retriedCount: Int {
-        attempts.filter { $0.retryCount > 0 }.count
+        attempts.reduce(0) { $0 + $1.retryCount }
     }
 
     private var skippedCount: Int {
@@ -35,7 +34,7 @@ struct SessionCompleteView: View {
             VStack(spacing: 0) {
                 SummaryRow(label: "Nailed it", count: nailedCount, color: .green)
                 Divider().padding(.leading)
-                SummaryRow(label: "Needed retries", count: retriedCount, color: .orange)
+                SummaryRow(label: "Retry attempts", count: retriedCount, color: .orange)
                 Divider().padding(.leading)
                 SummaryRow(label: "Skipped", count: skippedCount, color: .secondary)
             }

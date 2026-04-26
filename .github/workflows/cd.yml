@@ -1,15 +1,18 @@
+# CD Pipeline
 name: CD
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types: [completed]
+  push:
     branches: [main]
+# on:
+#   workflow_run:
+#     workflows: ["CI"]
+#     types: [completed]
+#     branches: [main]
 
 jobs:
   deploy:
     runs-on: macos-26
-    if: github.event.workflow_run.conclusion == 'success'
 
     steps:
       - name: Checkout
@@ -23,18 +26,63 @@ jobs:
           mkdir -p /tmp/private_keys
           echo "${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}" > /tmp/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
 
+      - name: Import Distribution Certificate
+        env:
+          CERTIFICATE_P12: ${{ secrets.DISTRIBUTION_CERTIFICATE_P12 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.DISTRIBUTION_CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          echo "$CERTIFICATE_P12" | base64 --decode > /tmp/distribution.p12
+          security import /tmp/distribution.p12 -P "$CERTIFICATE_PASSWORD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> $GITHUB_ENV
+          echo "KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> $GITHUB_ENV
+          EXISTING=$(security list-keychains -d user | sed "s/[[:space:]]*\"//g" | sed "s/\"//g" | tr '\n' ' ')
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $EXISTING
+          echo "Keychain search list:"
+          security list-keychains -d user
+          echo "Identities found:"
+          security find-identity -v -p codesigning
+          rm /tmp/distribution.p12
+
+      - name: Install Provisioning Profile
+        env:
+          PROVISIONING_PROFILE: ${{ secrets.PROVISIONING_PROFILE }}
+        run: |
+          PP_PATH=$RUNNER_TEMP/profile.mobileprovision
+          echo "$PROVISIONING_PROFILE" | base64 --decode > "$PP_PATH"
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          UUID=$(security cms -D -i "$PP_PATH" 2>/dev/null | \
+            grep -A1 '<key>UUID</key>' | \
+            grep '<string>' | \
+            sed 's/.*<string>\(.*\)<\/string>.*/\1/' | \
+            tr -d ' \t')
+          echo "Profile UUID: $UUID"
+          echo "PROFILE_UUID=$UUID" >> $GITHUB_ENV
+          if [ -z "$UUID" ]; then
+            echo "ERROR: Failed to extract UUID from provisioning profile"
+            exit 1
+          fi
+          cp "$PP_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/$UUID.mobileprovision"
+          echo "Profile installed at: $HOME/Library/MobileDevice/Provisioning Profiles/$UUID.mobileprovision"
+          ls -la "$HOME/Library/MobileDevice/Provisioning Profiles/"
+
       - name: Build and archive
         run: |
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           xcodebuild archive \
             -project PoomsaeFlow/PoomsaeFlow.xcodeproj \
             -scheme PoomsaeFlow \
             -destination "generic/platform=iOS" \
             -archivePath /tmp/PoomsaeFlow.xcarchive \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath /tmp/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8 \
-            -authenticationKeyID ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }} \
-            -authenticationKeyIssuerID ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }} \
-            CODE_SIGN_STYLE=Automatic \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution: Ryan Lecha (57UUVGRX22)" \
+            PROVISIONING_PROFILE=$PROFILE_UUID \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
             CURRENT_PROJECT_VERSION=${{ github.run_number }}
 
@@ -46,13 +94,24 @@ jobs:
           <plist version="1.0">
           <dict>
               <key>method</key>
-              <string>app-store</string>
+              <string>app-store-connect</string>
               <key>teamID</key>
               <string>${{ secrets.APPLE_TEAM_ID }}</string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>signingCertificate</key>
+              <string>Apple Distribution</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>com.ryan.PoomsaeFlow</key>
+                  <string>PoomsaeFlow iOS AppStore Distribution</string>
+              </dict>
+              <key>stripSwiftSymbols</key>
+              <true/>
               <key>uploadBitcode</key>
               <false/>
-              <key>uploadSymbols</key>
-              <true/>
+              <key>compileBitcode</key>
+              <false/>
           </dict>
           </plist>
           EOF
@@ -77,3 +136,9 @@ jobs:
       - name: Remove API key
         if: always()
         run: rm -rf /tmp/private_keys
+
+      - name: Clean up keychain and profile
+        if: always()
+        run: |
+          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
+          rm -f ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision || true

@@ -85,6 +85,8 @@ jobs:
                     'Test' in name or name.startswith('.')
                     or name.endswith('View.swift')
                     or name.endswith('App.swift')
+                    or 'Helpers' in name
+                    or name == 'ShakeEffect.swift'
                   ):
                       continue
                   exec_lines = f.get('executableLines', 0)

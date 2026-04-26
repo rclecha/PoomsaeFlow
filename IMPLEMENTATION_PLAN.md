@@ -212,7 +212,8 @@ Same belt introduction structure as Taegeuk. All Sparta TKD YouTube videos popul
 | v1.1 | Dojang-specific form catalogs, Kukkiwon YouTube fallbacks for black belt forms | Complete ✅ |
 | v1.2 | Pinned Forms practice sessions, PinnedFormsView hub screen, bidirectional FormBrowserView | Complete ✅ |
 | v1.3 | Session UX (retry badge, shake, haptic), home nav refactor, CI pipeline, summary bug fixes | Complete ✅ |
-| v1.4 | CD signing fix (TestFlight), PR coverage comments, coverage + refactor audits | Planned |
+| v1.4 | CD pipeline — automated TestFlight builds on every merge to main | Complete ✅ |
+| v1.5 | PR coverage comments, coverage audit, add missing tests, refactor audit | Planned |
 | v2 | Weakness engine (frequency-weighted selection), stats view, custom dojang editor | Planned |
 | v3+ | Validate before expanding — no instructor mode, no Android, no shared backend | Planned |
 
@@ -265,6 +266,28 @@ GitHub Actions workflow on `macos-26`. Unit tests run on every push to `main` an
 
 - `SessionCompleteViewTests` — `test_retriedCount_sumsAllRetryTaps`, `test_nailedCount_includesPassedAfterRetry`
 - `SessionUITests` — `test_fullSetCard_opensSessionSetup`, `test_homeScreen_hasNoPlayButtonInToolbar`
+
+---
+
+## v1.4 — CD pipeline
+
+CD pipeline fully operational. Manual signing replaces Automatic signing, which fails on headless runners with "No Account for Team".
+
+### Signing setup
+
+Distribution certificate (`.p12`) and provisioning profile stored as GitHub Secrets (`DISTRIBUTION_CERTIFICATE_P12`, `DISTRIBUTION_CERTIFICATE_PASSWORD`, `PROVISIONING_PROFILE`). The "Import Distribution Certificate" step creates a temporary keychain, imports the cert, grants codesign partition access, and exports `KEYCHAIN_PATH`/`KEYCHAIN_PASSWORD` to `$GITHUB_ENV` for use in the archive step.
+
+### xcodebuild flags
+
+`CODE_SIGN_STYLE=Manual`, `CODE_SIGN_IDENTITY="Apple Distribution: Ryan Lecha (57UUVGRX22)"`, `PROVISIONING_PROFILE=$PROFILE_UUID` (UUID extracted from the installed profile at runtime).
+
+### ExportOptions.plist
+
+`method: app-store-connect`, `signingStyle: manual`, `provisioningProfiles` dict keyed by bundle ID `com.ryan.PoomsaeFlow`.
+
+### Trigger
+
+Fires after CI passes (`workflow_run` on CI completion, gated on `conclusion == 'success'`). Annual secret rotation required: certificate and profile expire April 2027 — see CLAUDE.md for rotation steps.
 
 ---
 

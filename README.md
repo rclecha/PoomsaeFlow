@@ -37,7 +37,7 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for full diagrams and [IMPLEMENTATION_P
 
 > **Read `CLAUDE.md` before writing any code.**
 
-v1 through v1.3 are complete. See `IMPLEMENTATION_PLAN.md` for architecture decisions and the version roadmap for what's next.
+v1 through v1.4 are complete. See `IMPLEMENTATION_PLAN.md` for architecture decisions and the version roadmap for what's next.
 
 ## Testing
 
@@ -45,6 +45,16 @@ v1 through v1.3 are complete. See `IMPLEMENTATION_PLAN.md` for architecture deci
 - **UITests:** 8 test classes — `AppLaunchTests`, `OnboardingUITests`, `PinnedFormsUITests`, `PinnedFormsManagerUITests`, `FormBrowserUITests`, `SettingsSchoolSwitchUITests`, `VideoResourceUITests`, `SessionUITests`
 - Run UITests with the `-uitesting` launch argument — this resets `UserDefaults` for a clean state on each run
 - **Total: 86 tests, all passing**
+
+## Changelog
+
+| Version | Summary |
+|---|---|
+| v1.4 | CD pipeline — automated TestFlight builds on every merge to main |
+| v1.3 | Session UX (retry badge, shake, haptic), home screen navigation, CI pipeline, summary bug fixes |
+| v1.2 | Pinned Forms practice sessions, PinnedFormsView hub screen, bidirectional FormBrowserView |
+| v1.1 | Dojang-specific form catalogs, Kukkiwon YouTube fallbacks for black belt forms |
+| v1 | Solo training loop — core session experience |
 
 ## Known v1 limitations
 
@@ -59,6 +69,7 @@ v1 through v1.3 are complete. See `IMPLEMENTATION_PLAN.md` for architecture deci
 | v1.1 | Dojang-specific catalogs, Kukkiwon fallbacks | Complete ✅ |
 | v1.2 | Pinned Forms practice sessions, UX polish, and UITest expansion | Complete ✅ |
 | v1.3 | Session UX (retry badge, shake, haptic), home screen navigation, CI pipeline, bug fixes | Complete ✅ |
-| v1.4 | CD signing fix (TestFlight), PR coverage comments, coverage + refactor audits | Planned |
+| v1.4 | CD pipeline — automated TestFlight builds on every merge to main | Complete ✅ |
+| v1.5 | PR coverage comments, coverage audit, add missing tests, refactor audit | Planned |
 | v2 | Weakness engine, stats view, custom dojang editor | Planned |
 | v3+ | Validate before expanding | Planned |

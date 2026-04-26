@@ -24,6 +24,7 @@ final class SessionViewModel {
     var attempts: [FormAttempt]   { controller.attempts }
     var currentIndex: Int         { controller.session.currentIndex }
     var queueCount: Int           { controller.session.queue.count }
+    var retryCount: Int           { controller.retryCount }
 
     /// True when the current form's ID is in the stored pinned set.
     /// Reads `userPrefs` directly so the value reflects any pin toggle without
@@ -67,20 +68,13 @@ final class SessionViewModel {
     /// hint never appears again after the user has discovered the feature.
     func userTappedPin() {
         guard let form = currentForm else { return }
-        let stored = userPrefs.pinnedForms
-        var ids = stored?.formIDs ?? []
-        if let index = ids.firstIndex(of: form.id) {
-            ids.remove(at: index)
-        } else {
-            ids.append(form.id)
-        }
-        let now = Date()
-        userPrefs.save(PinnedForms(
-            formIDs: ids,
-            createdAt: stored?.createdAt ?? now,
-            updatedAt: now
-        ))
+        let stored = userPrefs.pinnedForms ?? .empty
+        let updated = stored.formIDs.contains(form.id)
+            ? stored.removing(form.id)
+            : stored.adding(form.id)
+        userPrefs.save(updated)
         if let onboarding = userPrefs.onboardingState, !onboarding.hasSeenPinHint {
+            let now = Date()
             userPrefs.save(OnboardingState(
                 isOnboarded: onboarding.isOnboarded,
                 hasSeenPinHint: true,

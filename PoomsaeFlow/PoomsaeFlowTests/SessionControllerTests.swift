@@ -8,6 +8,8 @@ final class SessionControllerTests: XCTestCase {
 
     // MARK: - Fixtures
 
+    private let fixedUserID = UUID()
+
     private func makeController(formCount: Int) -> SessionController {
         let forms = (0..<formCount).map { i in
             TKDForm(id: UUID(), name: "Form \(i)", koreanName: nil,
@@ -15,7 +17,7 @@ final class SessionControllerTests: XCTestCase {
         }
         let session = PracticeSession(id: UUID(), scope: .fullSet, order: .sequential,
                                       queue: forms, currentIndex: 0)
-        return SessionController(session: session)
+        return SessionController(session: session, userID: fixedUserID)
     }
 
     // MARK: - Initial state

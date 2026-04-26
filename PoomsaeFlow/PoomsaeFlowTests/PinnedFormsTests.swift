@@ -116,6 +116,52 @@ final class PinnedFormsTests: XCTestCase {
         XCTAssertEqual(result.formIDs, [c, a, b])
     }
 
+    // MARK: - removingAll(_:)
+
+    func test_removingAll_removesMatchingIDs() {
+        let a = UUID(), b = UUID(), c = UUID()
+        let initial = makePins(a, b, c)
+        let result  = initial.removingAll([a, c])
+        XCTAssertEqual(result.formIDs, [b])
+    }
+
+    func test_removingAll_updatesUpdatedAt() {
+        let a = UUID(), b = UUID()
+        let initial = makePins(a, b)
+        let result  = initial.removingAll([a])
+        XCTAssertGreaterThan(result.updatedAt, initial.updatedAt)
+    }
+
+    func test_removingAll_preservesCreatedAt() {
+        let a = UUID()
+        let initial = makePins(a)
+        let result  = initial.removingAll([a])
+        XCTAssertEqual(result.createdAt, initial.createdAt)
+    }
+
+    func test_removingAll_emptySet_isNoOp() {
+        let a = UUID()
+        let initial = makePins(a)
+        let result  = initial.removingAll([])
+        XCTAssertEqual(result.formIDs, initial.formIDs)
+        XCTAssertEqual(result.updatedAt, initial.updatedAt)
+    }
+
+    func test_removingAll_allAbsent_isNoOp() {
+        let a = UUID()
+        let initial = makePins(a)
+        let result  = initial.removingAll([UUID(), UUID()])
+        XCTAssertEqual(result.formIDs, initial.formIDs)
+        XCTAssertEqual(result.updatedAt, initial.updatedAt)
+    }
+
+    func test_removingAll_allIDs_leavesEmpty() {
+        let a = UUID(), b = UUID()
+        let initial = makePins(a, b)
+        let result  = initial.removingAll([a, b])
+        XCTAssertTrue(result.formIDs.isEmpty)
+    }
+
     // MARK: - Codable round-trip
 
     func test_codable_roundTrip() throws {

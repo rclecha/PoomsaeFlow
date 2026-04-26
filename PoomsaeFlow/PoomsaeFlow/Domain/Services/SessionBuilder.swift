@@ -52,6 +52,11 @@ enum SessionBuilder {
         }
     }
 
+    // Built once from the static enum definition; used by every sequential sort.
+    private static let familyRank: [FormFamily: Int] = Dictionary(
+        uniqueKeysWithValues: FormFamily.allCases.enumerated().map { ($1, $0) }
+    )
+
     private nonisolated static func ordered(
         _ forms: [TKDForm],
         by order: SessionOrder
@@ -60,9 +65,6 @@ enum SessionBuilder {
         case .sequential:
             // Primary: introducedAt.order ascending (belt rank).
             // Tiebreaker: FormFamily.allCases position — Keecho, Taegeuk, Palgwe, Poom, Black Belt.
-            let familyRank = Dictionary(
-                uniqueKeysWithValues: FormFamily.allCases.enumerated().map { ($1, $0) }
-            )
             return forms.sorted {
                 let beltDiff = $0.introducedAt.order - $1.introducedAt.order
                 if beltDiff != 0 { return beltDiff < 0 }

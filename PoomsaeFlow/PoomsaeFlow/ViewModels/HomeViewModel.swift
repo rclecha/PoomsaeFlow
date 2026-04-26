@@ -61,7 +61,7 @@ final class HomeViewModel {
     /// Pinned forms resolved from IDs to full TKDForm values, preserving insertion order.
     /// UUIDs that no longer exist in the catalog are silently dropped.
     var resolvedPinnedForms: [TKDForm] {
-        let catalog = Dictionary(uniqueKeysWithValues: formRepo.all.map { ($0.id, $0) })
+        let catalog = formsByID
         return pinnedForms.formIDs.compactMap { catalog[$0] }
     }
 
@@ -93,6 +93,10 @@ final class HomeViewModel {
         // unwrapping first is safe. The custom preset is unreachable in v1 because
         // onboarding never persists it as the active profile.
         let storedBeltID = userPrefs.trainingProfile?.selectedBeltLevelID
+        precondition(
+            !profile.beltLevels.isEmpty,
+            "Active profile has no belt levels. BeltSystemPreset.custom is not supported in v1 and must never be stored as the active profile."
+        )
         let belt = profile.beltLevels.first { $0.id == storedBeltID }
                 ?? profile.beltLevels.first!
 
@@ -103,11 +107,7 @@ final class HomeViewModel {
             updatedAt: Date()
         )
 
-        let pinned = userPrefs.pinnedForms ?? PinnedForms(
-            formIDs: [],
-            createdAt: Date(),
-            updatedAt: Date()
-        )
+        let pinned = userPrefs.pinnedForms ?? .empty
 
         self.activeProfile = profile
         self.activeBeltLevel = belt
@@ -141,10 +141,7 @@ final class HomeViewModel {
     func confirmSchoolSwitch() {
         guard let pending = pendingSchoolSwitch else { return }
         let orphanIDs = Set(pending.orphanedForms.map { $0.id })
-        var updated = pinnedForms
-        for id in orphanIDs {
-            updated = updated.removing(id)
-        }
+        let updated = pinnedForms.removingAll(orphanIDs)
         pinnedForms = updated
         userPrefs.save(updated)
         applyProfileChange(profile: pending.profile, belt: pending.belt)
@@ -157,14 +154,8 @@ final class HomeViewModel {
     }
 
     func saveBeltLevel(_ beltLevel: BeltLevel) {
-        let now = Date()
         activeBeltLevel = beltLevel
-        userPrefs.save(TrainingProfile(
-            selectedProfileID: activeProfile.id,
-            selectedBeltLevelID: beltLevel.id,
-            createdAt: userPrefs.trainingProfile?.createdAt ?? now,
-            updatedAt: now
-        ))
+        userPrefs.save(makeTrainingProfile(belt: beltLevel))
     }
 
     func saveSessionDefaults(_ defaults: SessionDefaults) {
@@ -175,11 +166,7 @@ final class HomeViewModel {
     /// Re-reads pinned forms from the repository so HomeView reflects changes made
     /// during a session (e.g. the user tapped the pin button in SessionView).
     func reloadPinnedForms() {
-        pinnedForms = userPrefs.pinnedForms ?? PinnedForms(
-            formIDs: [],
-            createdAt: Date(),
-            updatedAt: Date()
-        )
+        pinnedForms = userPrefs.pinnedForms ?? .empty
     }
 
     // MARK: - Pin mutations
@@ -221,24 +208,32 @@ final class HomeViewModel {
 
     // MARK: - Private
 
-    private func applyProfileChange(profile: DojangProfile, belt: BeltLevel) {
+    private func makeTrainingProfile(belt: BeltLevel) -> TrainingProfile {
         let now = Date()
-        activeProfile = profile
-        activeBeltLevel = belt
-        userPrefs.save(profile)
-        userPrefs.save(TrainingProfile(
-            selectedProfileID: profile.id,
+        return TrainingProfile(
+            selectedProfileID: activeProfile.id,
             selectedBeltLevelID: belt.id,
             createdAt: userPrefs.trainingProfile?.createdAt ?? now,
             updatedAt: now
-        ))
+        )
+    }
+
+    private var formsByID: [UUID: TKDForm] {
+        Dictionary(uniqueKeysWithValues: formRepo.all.map { ($0.id, $0) })
+    }
+
+    private func applyProfileChange(profile: DojangProfile, belt: BeltLevel) {
+        activeProfile = profile
+        activeBeltLevel = belt
+        userPrefs.save(profile)
+        userPrefs.save(makeTrainingProfile(belt: belt))
     }
 
     /// Returns the pinned forms that would be orphaned by switching to `profile`.
     /// Returns empty if the new catalog is unrestricted (formIDs == nil).
     private func orphanedForms(for profile: DojangProfile) -> [TKDForm] {
         guard let allowedIDs = profile.formIDs else { return [] }
-        let catalog = Dictionary(uniqueKeysWithValues: formRepo.all.map { ($0.id, $0) })
+        let catalog = formsByID
         return pinnedForms.formIDs
             .filter { !allowedIDs.contains($0) }
             .compactMap { catalog[$0] }

@@ -13,19 +13,23 @@ final class SessionController {
 
     // MARK: - Init
 
-    /// - Parameter session: A fully resolved `PracticeSession` from `SessionBuilder`.
-    ///   The controller takes ownership; nothing outside should mutate the session after this.
+    /// Production init — uses `AnonymousIdentityProvider` for a stable per-device user ID.
     init(session: PracticeSession) {
         self.session = session
+        self.userID = AnonymousIdentityProvider().userID
+    }
+
+    /// Test init — accepts an explicit `userID` so tests can assert on attempt identity.
+    init(session: PracticeSession, userID: UUID) {
+        self.session = session
+        self.userID = userID
     }
 
     // MARK: - Derived State
 
-    /// `nil` when the session is complete. Uses the private safe subscript rather than a
-    /// raw index so there is no possible out-of-bounds crash if state ever diverges.
-    var currentForm: TKDForm? { session.queue[safe: session.currentIndex] }
+    var currentForm: TKDForm? { session.currentForm }
 
-    var isComplete: Bool { session.currentIndex >= session.queue.count }
+    var isComplete: Bool { session.isComplete }
 
     /// Linear 0.0 → 1.0 as forms are completed. Returns 0.0 for an empty queue rather
     /// than 1.0 to avoid a misleading "100% complete" flash before the controller is used.
@@ -48,7 +52,7 @@ final class SessionController {
     /// session. A new UUID per session is correct for v1 (all users are anonymous); a single
     /// stable UUID per session means all attempts in one session share an identity that can
     /// be correlated later without requiring a real account system.
-    private let userID: UUID = UUID()
+    private let userID: UUID
 
     /// Records the outcome of the current form and advances the session if the outcome
     /// is terminal (anything other than `.retry`).
@@ -56,23 +60,23 @@ final class SessionController {
     /// `.passedAfterRetry` is resolved here — not by the caller — because only this object
     /// knows how many retries preceded the pass. Pushing that logic to call sites would
     /// require every caller to track `retryCount`, violating the single-owner principle.
-    func recordOutcome(_ outcome: AttemptOutcome) {
+    func recordOutcome(_ outcome: TransientOutcome) {
         guard let form = currentForm else { return }
 
         switch outcome {
         case .retry:
             retryCount += 1
 
-        case .passed, .passedAfterRetry, .skipped:
-            let resolvedOutcome: AttemptOutcome = (outcome == .passed && retryCount > 0)
-                ? .passedAfterRetry : outcome
+        case .passed, .skipped:
+            let persistedOutcome: AttemptOutcome = (outcome == .passed && retryCount > 0)
+                ? .passedAfterRetry : (outcome == .passed ? .passed : .skipped)
             let now = Date()
             let attempt = FormAttempt(
                 sessionID: session.id,
                 formID: form.id,
                 userID: userID,
                 attemptedAt: now,
-                outcome: resolvedOutcome,
+                outcome: persistedOutcome,
                 retryCount: retryCount,
                 createdAt: now,
                 updatedAt: now
@@ -84,13 +88,3 @@ final class SessionController {
     }
 }
 
-// MARK: - Array safe subscript
-
-/// Defined here (not globally) because this is the only file that needs it.
-/// `PracticeSession.currentForm` uses explicit bounds-checking inline; this subscript
-/// is the cleaner form for `SessionController`'s use at the call site.
-private extension Array {
-    subscript(safe index: Int) -> Element? {
-        indices.contains(index) ? self[index] : nil
-    }
-}

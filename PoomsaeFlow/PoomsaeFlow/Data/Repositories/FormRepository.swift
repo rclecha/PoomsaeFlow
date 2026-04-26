@@ -15,6 +15,6 @@ struct DefaultFormRepository: FormRepository {
     }
 
     func forms(for ids: Set<UUID>) -> [TKDForm] {
-        FormsDataSource.all.filter { ids.contains($0.id) }
+        all.filter { ids.contains($0.id) }
     }
 }

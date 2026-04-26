@@ -33,7 +33,7 @@ enum FormsDataSource {
     /// Single source of truth for all form UUIDs. Grouped here — not scattered through
     /// the form definitions below — so that adding, renaming, or auditing an ID requires
     /// touching exactly one place in this file.
-    private enum FormID {
+    enum FormID {
         // Keecho
         static let keechoIlJang  = UUID(uuidString: "00000001-0000-0000-0000-000000000001")!
         static let keechoEeJang  = UUID(uuidString: "00000001-0000-0000-0000-000000000002")!

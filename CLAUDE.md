@@ -136,6 +136,29 @@ The following secrets expire annually and must be rotated before the CD pipeline
 
 Set a calendar reminder for March 2027 to rotate both before they expire.
 
+## Known Rule Exceptions
+
+These patterns appear to violate the rules above but are intentional:
+
+- **`HomeViewModel` references `BeltSystemPreset.spartaTKD`** — permitted because `HomeViewModel.init`
+  is the bootstrap boundary: it must seed a default profile before onboarding runs.
+  This is the only place outside the data layer that names a preset. All other callers
+  receive a `DojangProfile` value and must never reference `BeltSystemPreset` directly.
+
+## Deferred Refactors
+
+Items identified in the v1.5 refactor audit but deferred pending future scope decisions:
+
+- **`FilterViewModel` ↔ `HomeViewModel` `enabledFamilies` sync** — `FilterViewModel` initialises
+  its `enabledFamilies` from `sessionDefaults` but does not write back on dismiss; the calling
+  view manually propagates the value. Should be unified when `FilterViewModel` ownership is
+  revisited for v2 settings.
+- **`BeltSystemPreset.makeProfile()` restructure** — the method body is long due to inline belt
+  tuples. Consider extracting `makeBelts()` per preset case if a third preset is ever added.
+- **`Date()` injection at mutation sites** — `HomeViewModel` and `SessionController` call
+  `Date()` inline, making time-sensitive tests impossible without mocking. Deferred until
+  a `Clock` abstraction is justified by actual test failures.
+
 ## v2 scope (do not build yet)
 - Weakness engine
 - Stats view

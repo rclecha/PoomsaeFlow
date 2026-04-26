@@ -28,8 +28,8 @@ protocol UserPrefsRepository {
 
 struct DefaultUserPrefsRepository: UserPrefsRepository {
     private let defaults: UserDefaults
-    private let encoder  = JSONEncoder()
-    private let decoder  = JSONDecoder()
+    private static let encoder = JSONEncoder()
+    private static let decoder = JSONDecoder()
 
     init() {
         self.defaults = .standard
@@ -102,12 +102,12 @@ struct DefaultUserPrefsRepository: UserPrefsRepository {
     // MARK: - Helpers
 
     private func encode<T: Encodable>(_ value: T, forKey key: String) {
-        guard let data = try? encoder.encode(value) else { return }
+        guard let data = try? Self.encoder.encode(value) else { return }
         defaults.set(data, forKey: key)
     }
 
     private func decode<T: Decodable>(_ type: T.Type, forKey key: String) -> T? {
         guard let data = defaults.data(forKey: key) else { return nil }
-        return try? decoder.decode(type, from: data)
+        return try? Self.decoder.decode(type, from: data)
     }
 }

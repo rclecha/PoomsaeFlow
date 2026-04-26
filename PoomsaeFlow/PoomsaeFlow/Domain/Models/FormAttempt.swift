@@ -1,15 +1,22 @@
 import Foundation
 import SwiftData
 
-/// `.retry` is intentionally excluded from persistence. It signals that the user wants
-/// another attempt within the same session — a transient UI state, not a historical fact.
-/// Writing it to SwiftData would corrupt history queries that expect only terminal outcomes.
+/// The outcome recorded in SwiftData for a completed form attempt. All cases are terminal
+/// — once written, an attempt is never edited. `.passedAfterRetry` is resolved internally
+/// by `SessionController`; callers pass `TransientOutcome` to `recordOutcome(_:)` instead.
 enum AttemptOutcome: String, Codable {
     case passed
     case passedAfterRetry
     case skipped
-    /// Transient — never written to SwiftData. Resolved to a terminal outcome before save.
+}
+
+/// The user-facing input to `SessionController.recordOutcome(_:)`.
+/// `.retry` is transient — it never reaches SwiftData. `SessionController` maps
+/// `.passed` → `.passedAfterRetry` when `retryCount > 0` before persisting.
+enum TransientOutcome {
+    case passed
     case retry
+    case skipped
 }
 
 @Model

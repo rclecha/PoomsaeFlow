@@ -377,3 +377,209 @@ private final class SpyUserPrefsRepository: UserPrefsRepository {
     func save(_ onboardingState: OnboardingState) {}
     func save(_ activeProfile: DojangProfile)     { savedProfiles.append(activeProfile) }
 }
+
+// MARK: - pinForm / unpinForm / reorderPinnedForms
+
+final class HomeViewModelPinTests: XCTestCase {
+
+    private func makeBelt(_ canonical: CanonicalBelt = .white) -> BeltLevel {
+        BeltLevel(id: UUID(), name: "\(canonical)", canonical: canonical,
+                  displayOrder: 0, colorHex: "#000000", isDefault: true,
+                  createdAt: .now, updatedAt: .now)
+    }
+
+    private func makeForm(id: UUID = UUID()) -> TKDForm {
+        TKDForm(id: id, name: "Form", koreanName: nil,
+                family: .taegeuk, introducedAt: .white, videos: [], notes: nil)
+    }
+
+    private func makeVM(
+        pinnedIDs: [UUID] = [],
+        forms: [TKDForm] = []
+    ) -> (HomeViewModel, SpyUserPrefsRepository) {
+        let belt    = makeBelt()
+        let profile = DojangProfile(id: UUID(), name: "Test", beltLevels: [belt],
+                                    formIDs: nil, createdAt: .now, updatedAt: .now)
+        let pinned  = PinnedForms(formIDs: pinnedIDs, createdAt: .now, updatedAt: .now)
+        let spy     = SpyUserPrefsRepository(profile: profile, beltID: belt.id, pinnedForms: pinned)
+        let repo    = StubFormRepository(forms: forms)
+        return (HomeViewModel(userPrefs: spy, formRepo: repo), spy)
+    }
+
+    // MARK: - pinForm
+
+    func test_pinForm_addsIDToPinnedForms() {
+        let id       = UUID()
+        let (vm, spy) = makeVM(forms: [makeForm(id: id)])
+        vm.pinForm(id)
+        XCTAssertTrue(vm.pinnedForms.formIDs.contains(id))
+        XCTAssertEqual(spy.savedPinnedForms.last?.formIDs.contains(id), true)
+    }
+
+    /// pinForm on an already-pinned ID must not create a duplicate.
+    func test_pinForm_duplicateID_doesNotDuplicate() {
+        let id       = UUID()
+        let (vm, _)  = makeVM(pinnedIDs: [id], forms: [makeForm(id: id)])
+        vm.pinForm(id)
+        XCTAssertEqual(vm.pinnedForms.formIDs.filter { $0 == id }.count, 1)
+    }
+
+    // MARK: - unpinForm
+
+    func test_unpinForm_removesIDFromPinnedForms() {
+        let id        = UUID()
+        let (vm, spy) = makeVM(pinnedIDs: [id], forms: [makeForm(id: id)])
+        vm.unpinForm(id)
+        XCTAssertFalse(vm.pinnedForms.formIDs.contains(id))
+        XCTAssertEqual(spy.savedPinnedForms.last?.formIDs.contains(id), false)
+    }
+
+    func test_unpinForm_absentID_doesNotChangeFormIDs() {
+        let existingID = UUID()
+        let ghostID    = UUID()
+        let (vm, _)    = makeVM(pinnedIDs: [existingID], forms: [makeForm(id: existingID)])
+        vm.unpinForm(ghostID)
+        XCTAssertEqual(vm.pinnedForms.formIDs, [existingID])
+    }
+
+    // MARK: - reorderPinnedForms
+
+    /// Move item at index 0 to the end: [A, B, C] → [B, C, A].
+    func test_reorderPinnedForms_movesFirstToEnd_andPersists() {
+        let a = UUID(), b = UUID(), c = UUID()
+        let (vm, spy) = makeVM(
+            pinnedIDs: [a, b, c],
+            forms: [makeForm(id: a), makeForm(id: b), makeForm(id: c)]
+        )
+        vm.reorderPinnedForms(fromOffsets: IndexSet(integer: 0), toOffset: 3)
+        XCTAssertEqual(vm.pinnedForms.formIDs, [b, c, a])
+        XCTAssertNotNil(spy.savedPinnedForms.last)
+    }
+}
+
+// MARK: - buildSession
+
+final class HomeViewModelBuildSessionTests: XCTestCase {
+
+    private func makeBelt(_ canonical: CanonicalBelt = .black) -> BeltLevel {
+        BeltLevel(id: UUID(), name: "\(canonical)", canonical: canonical,
+                  displayOrder: 0, colorHex: "#000000", isDefault: true,
+                  createdAt: .now, updatedAt: .now)
+    }
+
+    private func makeForm(id: UUID = UUID(), family: FormFamily = .taegeuk,
+                          introducedAt: CanonicalBelt = .white) -> TKDForm {
+        TKDForm(id: id, name: "Form", koreanName: nil,
+                family: family, introducedAt: introducedAt, videos: [], notes: nil)
+    }
+
+    private func makeVM(pinnedIDs: [UUID] = [], forms: [TKDForm],
+                        belt: BeltLevel? = nil) -> HomeViewModel {
+        let beltLevel = belt ?? makeBelt()
+        let profile   = DojangProfile(id: UUID(), name: "Test", beltLevels: [beltLevel],
+                                      formIDs: nil, createdAt: .now, updatedAt: .now)
+        let pinned    = PinnedForms(formIDs: pinnedIDs, createdAt: .now, updatedAt: .now)
+        let spy       = SpyUserPrefsRepository(profile: profile, beltID: beltLevel.id,
+                                               pinnedForms: pinned)
+        let repo      = StubFormRepository(forms: forms)
+        return HomeViewModel(userPrefs: spy, formRepo: repo)
+    }
+
+    func test_buildSession_singleScope_returnsOneFormQueue() {
+        let target = makeForm()
+        let vm     = makeVM(forms: [makeForm(), target, makeForm()])
+        let session = vm.buildSession(scope: .single(target.id),
+                                      order: .sequential,
+                                      families: FormFamily.allCases)
+        XCTAssertEqual(session.queue.count, 1)
+        XCTAssertEqual(session.queue.first?.id, target.id)
+    }
+
+    func test_buildSession_fullBeltScope_returnsAllEligibleForms() {
+        let forms   = [makeForm(), makeForm(), makeForm()]
+        let vm      = makeVM(forms: forms)
+        let session = vm.buildSession(scope: .fullSet, order: .sequential,
+                                      families: FormFamily.allCases)
+        XCTAssertEqual(session.queue.count, forms.count)
+        XCTAssertEqual(Set(session.queue.map(\.id)), Set(forms.map(\.id)))
+    }
+
+    func test_buildSession_pinnedScope_returnsOnlyPinnedForms() {
+        let pinnedID   = UUID()
+        let unpinnedID = UUID()
+        let vm = makeVM(
+            pinnedIDs: [pinnedID],
+            forms: [makeForm(id: pinnedID), makeForm(id: unpinnedID)]
+        )
+        let session = vm.buildSession(scope: .pinned, order: .sequential,
+                                      families: FormFamily.allCases)
+        XCTAssertEqual(session.queue.count, 1)
+        XCTAssertEqual(session.queue.first?.id, pinnedID)
+    }
+
+    func test_buildSession_randomizedOrder_containsAllFormsAndMarksOrderCorrectly() {
+        let forms   = (0..<5).map { _ in makeForm() }
+        let vm      = makeVM(forms: forms)
+        let session = vm.buildSession(scope: .fullSet, order: .randomized,
+                                      families: FormFamily.allCases)
+        XCTAssertEqual(Set(session.queue.map(\.id)), Set(forms.map(\.id)))
+        XCTAssertEqual(session.order, .randomized)
+    }
+}
+
+// MARK: - eligibleForms
+
+final class HomeViewModelEligibleFormsTests: XCTestCase {
+
+    private func makeBelt(_ canonical: CanonicalBelt) -> BeltLevel {
+        BeltLevel(id: UUID(), name: "\(canonical)", canonical: canonical,
+                  displayOrder: 0, colorHex: "#000000", isDefault: true,
+                  createdAt: .now, updatedAt: .now)
+    }
+
+    private func makeForm(id: UUID = UUID(), family: FormFamily = .taegeuk,
+                          introducedAt: CanonicalBelt = .white) -> TKDForm {
+        TKDForm(id: id, name: "Form", koreanName: nil,
+                family: family, introducedAt: introducedAt, videos: [], notes: nil)
+    }
+
+    private func makeVM(belt: BeltLevel, forms: [TKDForm]) -> HomeViewModel {
+        let profile = DojangProfile(id: UUID(), name: "Test", beltLevels: [belt],
+                                    formIDs: nil, createdAt: .now, updatedAt: .now)
+        let spy     = SpyUserPrefsRepository(profile: profile, beltID: belt.id, pinnedForms: nil)
+        let repo    = StubFormRepository(forms: forms)
+        return HomeViewModel(userPrefs: spy, formRepo: repo)
+    }
+
+    /// enabledFamilies in sessionDefaults must gate which families appear in eligibleForms.
+    func test_eligibleForms_respectsEnabledFamiliesFromSessionDefaults() {
+        let taegeukID = UUID()
+        let palgweID  = UUID()
+        let vm = makeVM(belt: makeBelt(.black), forms: [
+            makeForm(id: taegeukID, family: .taegeuk),
+            makeForm(id: palgweID,  family: .palgwe),
+        ])
+
+        vm.saveSessionDefaults(SessionDefaults(
+            defaultOrder:    .sequential,
+            enabledFamilies: [.taegeuk],
+            createdAt: .now,
+            updatedAt: .now
+        ))
+
+        XCTAssertEqual(vm.eligibleForms.count, 1)
+        XCTAssertEqual(vm.eligibleForms.first?.id, taegeukID)
+    }
+
+    /// Forms introduced above the user's belt must not appear in eligibleForms.
+    func test_eligibleForms_respectsBeltCap() {
+        let belt      = makeBelt(.green)
+        let whiteForm = makeForm(introducedAt: .white)
+        let greenForm = makeForm(introducedAt: .green)
+        let blackForm = makeForm(introducedAt: .black)  // above belt
+        let vm        = makeVM(belt: belt, forms: [whiteForm, greenForm, blackForm])
+
+        XCTAssertEqual(vm.eligibleForms.count, 2)
+        XCTAssertFalse(vm.eligibleForms.contains { $0.introducedAt > .green })
+    }
+}

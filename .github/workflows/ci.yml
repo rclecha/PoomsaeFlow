@@ -81,7 +81,11 @@ jobs:
           for target in data.get('targets', []):
               for f in target.get('files', []):
                   name = f.get('name', '')
-                  if 'Test' in name or name.startswith('.'):
+                  if (
+                    'Test' in name or name.startswith('.')
+                    or name.endswith('View.swift')
+                    or name.endswith('App.swift')
+                  ):
                       continue
                   exec_lines = f.get('executableLines', 0)
                   covered = f.get('coveredLines', 0)

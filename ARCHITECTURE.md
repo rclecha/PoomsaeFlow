@@ -33,6 +33,8 @@ graph TD
             TF[TKDForm]
             PS[PracticeSession]
             FA[FormAttempt]
+            AO[AttemptOutcome — persisted]
+            TO[TransientOutcome — user input]
         end
     end
 
@@ -40,6 +42,7 @@ graph TD
         FR[FormRepository]
         UPR[UserPrefsRepository]
         SR[SessionRepository stub — both methods no-ops, full SwiftData impl is v2]
+        UIP[UserIdentityProvider / AnonymousIdentityProvider]
     end
 
     subgraph External["External / Data Sources"]
@@ -98,11 +101,11 @@ sequenceDiagram
     loop Per form
         User->>SessionViewModel: userTappedRetry()
         SessionViewModel->>SessionController: recordOutcome(.retry)
-        Note over SessionController: retryCount++, index holds
+        Note over SessionController: TransientOutcome.retry — retryCount++, index holds
 
         User->>SessionViewModel: userTappedNailed()
         SessionViewModel->>SessionController: recordOutcome(.passed)
-        Note over SessionController: resolves to .passedAfterRetry if retryCount > 0
+        Note over SessionController: TransientOutcome.passed → AttemptOutcome.passedAfterRetry if retryCount > 0
         SessionController-->>SessionViewModel: index advances
     end
 
@@ -194,6 +197,7 @@ PoomsaeFlow/
 │   ├── Repositories/
 │   │   ├── FormRepository.swift
 │   │   ├── UserPrefsRepository.swift
+│   │   ├── UserIdentityProvider.swift
 │   │   └── SessionRepository.swift
 │   └── DataSources/
 │       └── FormsDataSource.swift
@@ -230,13 +234,21 @@ PoomsaeFlow/
 │   ├── SessionBuilderTests.swift
 │   ├── SessionControllerTests.swift
 │   ├── HomeViewModelTests.swift
-│   └── OnboardingFlowStateTests.swift
+│   ├── OnboardingFlowStateTests.swift
+│   ├── SessionCompleteViewTests.swift
+│   ├── FormFamilyTests.swift
+│   ├── FormsDataSourceTests.swift
+│   ├── FormRepositoryTests.swift
+│   ├── PracticeSessionTests.swift
+│   ├── PinnedFormsTests.swift
+│   └── UserPrefsRepositoryTests.swift
 └── PoomsaeFlowUITests/
     ├── AppLaunchTests.swift
     ├── FormBrowserUITests.swift
     ├── OnboardingUITests.swift
     ├── PinnedFormsManagerUITests.swift
     ├── PinnedFormsUITests.swift           ← intentionally failing — documents known bug
+    ├── SessionUITests.swift
     ├── SettingsSchoolSwitchUITests.swift
     ├── VideoResourceUITests.swift
     └── XCUIApplication+Helpers.swift

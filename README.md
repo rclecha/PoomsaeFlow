@@ -37,19 +37,21 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for full diagrams and [IMPLEMENTATION_P
 
 > **Read `CLAUDE.md` before writing any code.**
 
-v1 through v1.4 are complete. See `IMPLEMENTATION_PLAN.md` for architecture decisions and the version roadmap for what's next.
+v1 through v1.5 are complete. See `IMPLEMENTATION_PLAN.md` for architecture decisions and the version roadmap for what's next.
 
 ## Testing
 
-- **Unit tests:** 6 test files — TDD coverage for all services and controllers, `HomeViewModel`, `OnboardingFlowState`, and `SessionCompleteView`
+- **Unit tests:** 12 test files — TDD coverage for all services and controllers, `HomeViewModel`, `OnboardingFlowState`, `SessionCompleteView`, `FormFamily`, `FormsDataSource`, `FormRepository`, `PracticeSession`, `PinnedForms`, and `UserPrefsRepository`
 - **UITests:** 8 test classes — `AppLaunchTests`, `OnboardingUITests`, `PinnedFormsUITests`, `PinnedFormsManagerUITests`, `FormBrowserUITests`, `SettingsSchoolSwitchUITests`, `VideoResourceUITests`, `SessionUITests`
 - Run UITests with the `-uitesting` launch argument — this resets `UserDefaults` for a clean state on each run
-- **Total: 86 tests, all passing**
+- **Logic-layer coverage: 81.0%** — reported to the GitHub Actions job summary on every CI run
+- **Total: 164 tests, all passing**
 
 ## Changelog
 
 | Version | Summary |
 |---|---|
+| v1.5 | Coverage reporting (81.0%, job summary), 72 new unit tests (164 total), refactor audit + apply, Hwarang bug fix |
 | v1.4 | CD pipeline — automated TestFlight builds on every merge to main |
 | v1.3 | Session UX (retry badge, shake, haptic), home screen navigation, CI pipeline, summary bug fixes |
 | v1.2 | Pinned Forms practice sessions, PinnedFormsView hub screen, bidirectional FormBrowserView |
@@ -70,6 +72,7 @@ v1 through v1.4 are complete. See `IMPLEMENTATION_PLAN.md` for architecture deci
 | v1.2 | Pinned Forms practice sessions, UX polish, and UITest expansion | Complete ✅ |
 | v1.3 | Session UX (retry badge, shake, haptic), home screen navigation, CI pipeline, bug fixes | Complete ✅ |
 | v1.4 | CD pipeline — automated TestFlight builds on every merge to main | Complete ✅ |
-| v1.5 | PR coverage comments, coverage audit, add missing tests, refactor audit | Planned |
+| v1.5 | Coverage reporting, 72 new unit tests, refactor audit + apply | Complete ✅ |
+| v1.6 | Verify Taegeuk Sa Jang in WT green belt; poom belt split color | Planned |
 | v2 | Weakness engine, stats view, custom dojang editor | Planned |
 | v3+ | Validate before expanding | Planned |

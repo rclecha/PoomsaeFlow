@@ -65,3 +65,51 @@ jobs:
                   pct = f.get('lineCoverage', 0) * 100
                   print(f'{path}: {pct:.1f}%')
           "
+
+      - name: Post coverage to job summary
+        run: |
+          python3 -c "
+          import json, os
+
+          with open('coverage/coverage.json') as f:
+              data = json.load(f)
+
+          rows = []
+          total_exec = 0
+          total_covered = 0
+
+          for target in data.get('targets', []):
+              for f in target.get('files', []):
+                  name = f.get('name', '')
+                  if 'Test' in name or name.startswith('.'):
+                      continue
+                  exec_lines = f.get('executableLines', 0)
+                  covered = f.get('coveredLines', 0)
+                  pct = (covered / exec_lines * 100) if exec_lines > 0 else 0
+                  total_exec += exec_lines
+                  total_covered += covered
+                  emoji = '✅' if pct >= 80 else ('⚠️' if pct >= 50 else '❌')
+                  rows.append((name, pct, covered, exec_lines, emoji))
+
+          rows.sort(key=lambda x: x[1])
+
+          overall = (total_covered / total_exec * 100) if total_exec > 0 else 0
+          overall_emoji = '✅' if overall >= 80 else ('⚠️' if overall >= 50 else '❌')
+
+          lines = [
+              '## 📊 Code Coverage Report',
+              '',
+              f'**Overall: {overall_emoji} {overall:.1f}%** ({total_covered}/{total_exec} lines)',
+              '',
+              '| File | Coverage | Lines |',
+              '|------|----------|-------|',
+          ]
+          for name, pct, covered, exec_lines, emoji in rows:
+              lines.append(f'| {name} | {emoji} {pct:.1f}% | {covered}/{exec_lines} |')
+
+          summary = '\n'.join(lines)
+          print(summary)
+
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as f:
+              f.write(summary)
+          "
